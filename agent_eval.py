@@ -39,12 +39,17 @@ import json
 import operator
 import os
 import re
+import socket
 import sys
 import urllib.error
 import urllib.request
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from typing import Any
+
+
+class LLMTimeout(Exception):
+    """单次 LLM 请求超时。单独一类异常，便于按用例捕获而不中断整轮评测。"""
 
 # ============================================================================
 # 一、测试集
@@ -418,19 +423,20 @@ class OpenAIBackend(Backend):
     name = "openai"
 
     def __init__(self, base_url: str, model: str, api_key: str = "EMPTY",
-                 temperature: float = 0.0, timeout: int = 60):
+                 temperature: float = 0.0, timeout: int = 120, max_tokens: int = 128):
         self.url = base_url.rstrip("/") + "/chat/completions"
         self.model = model
         self.api_key = api_key
         self.temperature = temperature
         self.timeout = timeout
+        self.max_tokens = max_tokens
 
     def decide(self, messages: list[dict]) -> str:
         payload = json.dumps({
             "model": self.model,
             "messages": messages,
             "temperature": self.temperature,
-            "max_tokens": 256,
+            "max_tokens": self.max_tokens,
         }).encode("utf-8")
         req = urllib.request.Request(
             self.url, data=payload,
@@ -441,6 +447,11 @@ class OpenAIBackend(Backend):
             with urllib.request.urlopen(req, timeout=self.timeout) as resp:
                 data = json.loads(resp.read().decode("utf-8", errors="ignore"))
             return (data["choices"][0]["message"]["content"] or "").strip()
+        except (TimeoutError, socket.timeout) as exc:
+            raise LLMTimeout(
+                f"单次请求超过 {self.timeout}s（max_tokens={self.max_tokens}）。"
+                f"生成太慢时可用 --max-tokens 调小，或 --timeout 调大。原始错误：{exc}"
+            ) from exc
         except urllib.error.URLError as exc:
             raise RuntimeError(
                 f"连不上 LLM 后端 {self.url}：{exc}。"
@@ -463,6 +474,7 @@ class RunResult:
     hit_max_steps: bool = False
     parse_failures: int = 0
     final_text: str = ""
+    error: str = ""          # 该用例的失败原因（如超时），不影响其他用例
 
 
 def run_case(case: Case, backend: Backend) -> RunResult:
@@ -472,7 +484,12 @@ def run_case(case: Case, backend: Backend) -> RunResult:
     ]
     res = RunResult()
     for _ in range(MAX_STEPS):
-        text = backend.decide(messages)
+        try:
+            text = backend.decide(messages)
+        except LLMTimeout as exc:
+            # 超时只作废这一个用例，不中断整轮评测
+            res.error = f"超时: {exc}"
+            break
         action = parse_action(text)
         messages.append({"role": "assistant", "content": text})
         res.steps += 1
@@ -546,6 +563,7 @@ def grade(case: Case, res: RunResult) -> dict:
         "hit_max_steps": res.hit_max_steps,
         "failure_mode": case.failure_mode,
         "note": case.note,
+        "error": res.error,
     }
 
 
@@ -591,7 +609,8 @@ def summarize(rows: list[dict]) -> dict:
         "reasons": reasons,
         "by_cat": {k: rate(sum(x["correct"] for x in v), len(v)) for k, v in by_cat.items()},
         "cat_counts": {k: len(v) for k, v in by_cat.items()},
-        "max_steps_hits": sum(r["hit_max_steps"] for r in rows),
+        "hit_max_steps": sum(r["hit_max_steps"] for r in rows),
+        "errors": sum(1 for r in rows if r.get("error")),
     }
 
 
@@ -633,7 +652,8 @@ def render_report(backend_name: str, rows: list[dict], s: dict) -> str:
     L.append(f"| 不应调工具场景准确率 | {s['should_not_call_acc']:.1f}% |")
     L.append(f"| 误调用率（不该调却调了） | {s['false_call_rate']:.1f}% |")
     L.append(f"| 漏调用率（该调却没调） | {s['miss_call_rate']:.1f}% |")
-    L.append(f"| 触达最大步数（MAX_STEPS={MAX_STEPS}）的用例 | {s['max_steps_hits']} |")
+    L.append(f"| 触达最大步数（MAX_STEPS={MAX_STEPS}）的用例 | {s['hit_max_steps']} |")
+    L.append(f"| 请求失败/超时的用例 | {s['errors']} |")
     L.append("")
     L.append("## 错因分布")
     L.append("")
@@ -708,6 +728,10 @@ def main() -> int:
     ap.add_argument("--model", default=os.environ.get("LLM_MODEL", "lora1"),
                     help="模型名（对应 vLLM 的 --lora-modules 模块名）")
     ap.add_argument("--api-key", default=os.environ.get("LLM_API_KEY", "EMPTY"))
+    ap.add_argument("--timeout", type=int, default=120,
+                    help="单次请求超时秒数（openai 后端；生成慢时调大）")
+    ap.add_argument("--max-tokens", type=int, default=128,
+                    help="单次生成上限（openai 后端；工具决策的 Action 很短，调小可显著加速）")
     ap.add_argument("--out", default=os.path.join("output", "agent_eval.md"))
     ap.add_argument("--json-out", default=os.path.join("output", "agent_eval.json"))
     args = ap.parse_args()
@@ -719,8 +743,10 @@ def main() -> int:
     elif args.backend == "naive":
         backend = NaiveBackend()
     else:
-        backend = OpenAIBackend(args.base_url, args.model, args.api_key)
-        print(f"使用真实模型后端：{args.base_url} / model={args.model}")
+        backend = OpenAIBackend(args.base_url, args.model, args.api_key,
+                                timeout=args.timeout, max_tokens=args.max_tokens)
+        print(f"使用真实模型后端：{args.base_url} / model={args.model} / "
+              f"timeout={args.timeout}s / max_tokens={args.max_tokens}")
 
     try:
         rows = [grade(c, run_case(c, backend)) for c in cases]

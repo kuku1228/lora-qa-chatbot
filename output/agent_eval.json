@@ -35,7 +35,8 @@
       "边界·先追问": 1,
       "边界·超出工具能力": 1
     },
-    "max_steps_hits": 0
+    "hit_max_steps": 0,
+    "errors": 0
   },
   "rows": [
     {
@@ -73,7 +74,8 @@
       "steps": 2,
       "hit_max_steps": false,
       "failure_mode": "漏调用：该用工具却直接凭模型口算",
-      "note": "项目 README 里的示例问题"
+      "note": "项目 README 里的示例问题",
+      "error": ""
     },
     {
       "cid": "C02",
@@ -110,7 +112,8 @@
       "steps": 2,
       "hit_max_steps": false,
       "failure_mode": "漏调用：该用工具却直接凭模型口算",
-      "note": ""
+      "note": "",
+      "error": ""
     },
     {
       "cid": "C03",
@@ -147,7 +150,8 @@
       "steps": 2,
       "hit_max_steps": false,
       "failure_mode": "漏调用；且需要把自然语言转成表达式",
-      "note": ""
+      "note": "",
+      "error": ""
     },
     {
       "cid": "C04",
@@ -184,7 +188,8 @@
       "steps": 2,
       "hit_max_steps": false,
       "failure_mode": "漏调用；需要识别“取余”对应 % 运算符",
-      "note": ""
+      "note": "",
+      "error": ""
     },
     {
       "cid": "C05",
@@ -221,7 +226,8 @@
       "steps": 2,
       "hit_max_steps": false,
       "failure_mode": "漏调用；含浮点与括号",
-      "note": ""
+      "note": "",
+      "error": ""
     },
     {
       "cid": "C06",
@@ -254,7 +260,8 @@
       "steps": 2,
       "hit_max_steps": false,
       "failure_mode": "漏调用：模型没有实时信息却直接编时间",
-      "note": ""
+      "note": "",
+      "error": ""
     },
     {
       "cid": "C07",
@@ -287,7 +294,8 @@
       "steps": 2,
       "hit_max_steps": false,
       "failure_mode": "漏调用",
-      "note": ""
+      "note": "",
+      "error": ""
     },
     {
       "cid": "C08",
@@ -320,7 +328,8 @@
       "steps": 2,
       "hit_max_steps": false,
       "failure_mode": "漏调用",
-      "note": ""
+      "note": "",
+      "error": ""
     },
     {
       "cid": "C09",
@@ -357,7 +366,8 @@
       "steps": 2,
       "hit_max_steps": false,
       "failure_mode": "漏调用；或调用但漏掉/写错 URL 参数",
-      "note": ""
+      "note": "",
+      "error": ""
     },
     {
       "cid": "C10",
@@ -394,7 +404,8 @@
       "steps": 2,
       "hit_max_steps": false,
       "failure_mode": "漏调用；或把 URL 当自由文本处理",
-      "note": ""
+      "note": "",
+      "error": ""
     },
     {
       "cid": "C11",
@@ -427,7 +438,8 @@
       "steps": 2,
       "hit_max_steps": false,
       "failure_mode": "漏调用；或拿到 Observation 后不继续输出最终答案",
-      "note": ""
+      "note": "",
+      "error": ""
     },
     {
       "cid": "C12",
@@ -478,7 +490,8 @@
       "steps": 3,
       "hit_max_steps": false,
       "failure_mode": "只完成第一步就结束（Observation 后未继续决策）",
-      "note": ""
+      "note": "",
+      "error": ""
     },
     {
       "cid": "C13",
@@ -497,7 +510,8 @@
       "steps": 1,
       "hit_max_steps": false,
       "failure_mode": "误调用：把对话指代当成需要外部信息的任务",
-      "note": ""
+      "note": "",
+      "error": ""
     },
     {
       "cid": "C14",
@@ -516,7 +530,8 @@
       "steps": 1,
       "hit_max_steps": false,
       "failure_mode": "误调用",
-      "note": ""
+      "note": "",
+      "error": ""
     },
     {
       "cid": "C15",
@@ -535,7 +550,8 @@
       "steps": 1,
       "hit_max_steps": false,
       "failure_mode": "误调用：历史信息已在上下文里",
-      "note": ""
+      "note": "",
+      "error": ""
     },
     {
       "cid": "C16",
@@ -554,7 +570,8 @@
       "steps": 1,
       "hit_max_steps": false,
       "failure_mode": "误调用",
-      "note": ""
+      "note": "",
+      "error": ""
     },
     {
       "cid": "C17",
@@ -573,7 +590,8 @@
       "steps": 1,
       "hit_max_steps": false,
       "failure_mode": "误调用：模型自身知识即可回答",
-      "note": ""
+      "note": "",
+      "error": ""
     },
     {
       "cid": "C18",
@@ -592,7 +610,8 @@
       "steps": 1,
       "hit_max_steps": false,
       "failure_mode": "误调用",
-      "note": ""
+      "note": "",
+      "error": ""
     },
     {
       "cid": "C19",
@@ -611,7 +630,8 @@
       "steps": 1,
       "hit_max_steps": false,
       "failure_mode": "误调用",
-      "note": ""
+      "note": "",
+      "error": ""
     },
     {
       "cid": "C20",
@@ -630,7 +650,8 @@
       "steps": 1,
       "hit_max_steps": false,
       "failure_mode": "误调用：关键词触发（含“计算”二字但不是算题）",
-      "note": ""
+      "note": "",
+      "error": ""
     },
     {
       "cid": "C21",
@@ -649,7 +670,8 @@
       "steps": 1,
       "hit_max_steps": false,
       "failure_mode": "误调用：关键词触发",
-      "note": ""
+      "note": "",
+      "error": ""
     },
     {
       "cid": "C22",
@@ -668,7 +690,8 @@
       "steps": 1,
       "hit_max_steps": false,
       "failure_mode": "误调用：没给 URL，模型可能编造链接去抓",
-      "note": ""
+      "note": "",
+      "error": ""
     },
     {
       "cid": "C23",
@@ -687,7 +710,8 @@
       "steps": 1,
       "hit_max_steps": false,
       "failure_mode": "误调用：fetch_url 不是搜索引擎，且未给 URL",
-      "note": ""
+      "note": "",
+      "error": ""
     },
     {
       "cid": "C24",
@@ -706,7 +730,8 @@
       "steps": 1,
       "hit_max_steps": false,
       "failure_mode": "误调用：需要检索能力，超出工具范围，应说明局限",
-      "note": ""
+      "note": "",
+      "error": ""
     },
     {
       "cid": "C25",
@@ -725,7 +750,8 @@
       "steps": 1,
       "hit_max_steps": false,
       "failure_mode": "误调用：寒暄不需要任何工具",
-      "note": ""
+      "note": "",
+      "error": ""
     },
     {
       "cid": "C26",
@@ -744,7 +770,8 @@
       "steps": 1,
       "hit_max_steps": false,
       "failure_mode": "误调用：应介绍自身能力而不是去调工具",
-      "note": ""
+      "note": "",
+      "error": ""
     },
     {
       "cid": "C27",
@@ -763,7 +790,8 @@
       "steps": 1,
       "hit_max_steps": false,
       "failure_mode": "误调用",
-      "note": ""
+      "note": "",
+      "error": ""
     },
     {
       "cid": "C28",
@@ -782,7 +810,8 @@
       "steps": 1,
       "hit_max_steps": false,
       "failure_mode": "误调用：极简算式无需工具（本项目的提示词要求简单问题直接回答）",
-      "note": ""
+      "note": "",
+      "error": ""
     },
     {
       "cid": "C29",
@@ -801,7 +830,8 @@
       "steps": 1,
       "hit_max_steps": false,
       "failure_mode": "误调用：指代不明且无具体表达式，应该先追问",
-      "note": ""
+      "note": "",
+      "error": ""
     },
     {
       "cid": "C30",
@@ -820,7 +850,8 @@
       "steps": 1,
       "hit_max_steps": false,
       "failure_mode": "误调用：工具集不支持文件处理，应说明能力边界",
-      "note": ""
+      "note": "",
+      "error": ""
     }
   ]
 }

@@ -62,7 +62,11 @@ def main():
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
 
+    # 只加载两次（基座一次、微调后一次），每个模型跑"无 prompt / 有 prompt"两种配置。
+    # 相比每个组合都 load_model()，省掉两次 15GB 权重的读取与量化初始化。
+    print("加载基座模型 ...")
     base_model = load_model()                      # 原始 Qwen2-7B-Instruct
+    print("加载 LoRA 微调模型 ...")
     lora_model = load_model(ADAPTER_DIR)           # LoRA 微调模型
 
     rows = []
@@ -83,6 +87,14 @@ def main():
     with open(os.path.join("output", "ablation.md"), "w", encoding="utf-8") as f:
         f.write("# 消融对比：system prompt × LoRA 微调\n\n")
         f.write(f"模型：{BASE_MODEL} + LoRA(r=8) | 贪心解码 | 4 组合 × {len(QUESTIONS)} 题\n\n")
+        f.write("## 怎么读这张表\n\n")
+        f.write("| 组合 | 读了什么 | 怎么看 |\n|---|---|---|\n")
+        f.write("| A | 原始模型（无 prompt） | 基线 |\n")
+        f.write("| B | 原始模型 + system prompt | 与 A 比 → **prompt 单独的作用** |\n")
+        f.write("| C | LoRA 微调（无 prompt） | 与 A 比 → **微调单独的作用** |\n")
+        f.write("| D | LoRA 微调 + system prompt | 与 C 比 → prompt 在微调之上还有没有增量 |\n\n")
+        f.write("重点看 B 与 C：如果 B 已经解决了术语错误，说明 prompt 就够；")
+        f.write("如果 C 才解决，说明必须靠参数更新。\n\n")
         labels = {
             "A_base_no_sp": "A · 原始模型（无 prompt）",
             "B_base_sp": "B · 原始模型 + system prompt",
@@ -94,7 +106,8 @@ def main():
             for k in ["A_base_no_sp", "B_base_sp", "C_lora_no_sp", "D_lora_sp"]:
                 f.write(f"- **{labels[k]}**：{r[k]}\n\n")
     print("\n完成！结果已保存到 output/ablation.md")
-    print("下一步：把 output/ablation.md 发回给豆包，由它完成人工打分与结论整理")
+    print("→ 下一步：读 A/B/C/D 四组，把结论写进 README 的消融小节，")
+    print("  重点回答『prompt 单独能不能修正术语错误』这个问题。")
 
 
 if __name__ == "__main__":

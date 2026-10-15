@@ -53,7 +53,9 @@ ENV/
 # 训练 / 推理过程产物
 # ============================================================
 output/checkpoint-*/
+output/_baseline_fp16/
 output/runs/
+logs/
 vllm.log
 lora_output.zip
 *.log

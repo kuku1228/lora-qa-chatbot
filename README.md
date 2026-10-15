@@ -20,8 +20,8 @@
 | 项目 | 说明 |
 |---|---|
 | 基座 / 方法 | Qwen2-7B-Instruct + LoRA（r=8, α=16, dropout=0.05），注入注意力与 FFN 共 7 个线性层 |
-| 可训练参数 | 约 3,700 万，占全量 0.5% |
-| 显存 | 4bit NF4 量化 + 双重量化 + 梯度检查点 + 8bit paged AdamW，训练占用约 12GB |
+| 可训练参数 | 约 **2,019 万**，占全量 **0.265%**（按各层真实维度逐参数累加，可用 `2_train_lora.py` 的输出复算） |
+| 显存 | 4bit NF4 量化 + 双重量化 + 梯度检查点 + 8bit paged AdamW；单卡 12GB 显存可训练（峰值待实测填入，见下方「待补的实测数据」） |
 | 训练规模 | 1 epoch / 1,116 步 |
 | 数据 | alpaca_zh_51k 采样 2 万条，清洗后 18,053 条，训练 17,853 / 评估 200 |
 | Agent | LangGraph ReAct 状态机、3 类工具、多轮记忆 |
@@ -40,6 +40,37 @@
 
 四组结果都写到 `output/ablation.md`，可以逐题对照。写这个脚本的起因是：
 只跑微调前后的对比，没法说明提升是来自参数更新还是来自那句 system prompt。
+
+> 这四组的结果我还没跑出来，`output/ablation.md` 目前是空位。跑法与结论模板见
+> [`docs/云端补数据Runbook.md`](docs/云端补数据Runbook.md)。
+
+---
+
+## 📋 待补的实测数据
+
+下面几项在代码里都留了口子，但需要一块 GPU 才能真正跑出来。操作步骤见
+[`docs/云端补数据Runbook.md`](docs/云端补数据Runbook.md)，填数模板见
+[`docs/结果记录模板.md`](docs/结果记录模板.md)。
+
+| 待补 | 怎么拿 | 脚本 |
+|---|---|---|
+| 套模板后的 token 长度分布、各 `max_seq_len` 的截断比例 | 跑预处理脚本，自动写入 `output/data_stats.json` | `1_data_preprocess.py` |
+| 可训练参数**精确值** | 训练脚本开头会自动逐参数打印 | `2_train_lora.py` |
+| 训练**显存峰值** | 训练时并行采样 | `tools/monitor.py` |
+| 全量 fp16 的显存对照（用来算"下降 X%"） | 跑 50 步只测显存 | `tools/baseline_fp16.py` |
+| **PPL 对比数值** | 跑评估脚本 | `3_evaluate.py` |
+| **四组消融结论** | 跑消融脚本 | `ablation.py` |
+| Agent **真实模型决策准确率** | 先起 vLLM，再换 `openai` 后端 | `agent_eval.py` |
+
+其中 `tools/monitor.py` 与 `tools/baseline_fp16.py` 是这次专为"把估算值换成实测值"新加的：
+
+```bash
+# 显存采样（另开一个终端，训练前就要起）
+python tools/monitor.py --interval 5 --summary-every 900 --out logs/train_mem.csv
+
+# 全量 fp16 显存对照（50 步后自动退出；24GB 卡上 OOM 本身就是结论）
+python tools/baseline_fp16.py --steps 50
+```
 
 ---
 
@@ -201,9 +232,16 @@ lora-qa-chatbot/
 │   ├── gradio_agent.py     #   Gradio Agent 界面（ReAct 轨迹可视化）
 │   ├── serve_vllm.sh       #   vLLM + LoRA 部署脚本
 │   └── requirements-agent.txt
+├── tools/                  # 测量辅助脚本（补实测数据用）
+│   ├── monitor.py          #   训练期间显存/内存采样，输出峰值
+│   └── baseline_fp16.py    #   全量 fp16 微调显存对照（跑 50 步后退出）
 ├── data/                   # （运行后生成）清洗后数据 + 分布图
-├── output/                 # 训练产物：loss 曲线 / 同题对比
-└── docs/                   # 项目文档（架构详解 / 流程图）
+├── output/                 # 训练产物：loss 曲线 / 同题对比 / 评测报告
+└── docs/                   # 项目文档
+    ├── 架构详解.md          #   零基础向：模型架构、Agent 架构、各文件职责
+    ├── project_flow.html   #   流程图
+    ├── 云端补数据Runbook.md #   上 GPU 补实测数据的完整操作步骤
+    └── 结果记录模板.md      #   跑完后把数字填回文档的模板
 ```
 
 详细讲解见 [`docs/架构详解.md`](docs/架构详解.md)（零基础向，含模型架构、Agent 架构、每个文件职责）。

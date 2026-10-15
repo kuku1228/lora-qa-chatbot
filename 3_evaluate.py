@@ -105,28 +105,38 @@ def main():
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
 
-    # 1. PPL 对比
-    print("[1/3] 计算原始模型 PPL ...")
-    base_model = load_model()
     texts = build_eval_texts(tokenizer, n=100)
-    ppl_base = compute_ppl(base_model, tokenizer, texts)
 
-    print("[2/3] 计算 LoRA 微调模型 PPL ...")
-    lora_model = load_model(ADAPTER_DIR)
+    # 只加载一次基座：先测基座，再把 adapter 叠到同一份模型上测微调后。
+    # 相比 load_model() 调两次，省掉一次 15GB 权重的读取与 4bit 量化初始化。
+    print("[1/3] 加载基座模型（4bit）...")
+    model = load_model()
+
+    print("[2/3] 计算原始模型 PPL + 生成同题回答 ...")
+    ppl_base = compute_ppl(model, tokenizer, texts)
+    base_answers = {q: generate(model, tokenizer, q) for q in QUESTIONS}
+
+    print("[3/3] 叠加 LoRA adapter（同一份模型，不重新加载）...")
+    lora_model = PeftModel.from_pretrained(model, ADAPTER_DIR)
+    lora_model.eval()
     ppl_lora = compute_ppl(lora_model, tokenizer, texts)
+    lora_answers = {q: generate(lora_model, tokenizer, q) for q in QUESTIONS}
 
-    print("\n======== PPL 对比（评估集 100 条）========")
+    print("\n======== PPL 对比（评估集前 100 条）========")
     print(f"原始 Qwen2-7B-Instruct : {ppl_base:.4f}")
     print(f"LoRA 微调后            : {ppl_lora:.4f}")
     print(f"下降幅度                : {(1 - ppl_lora / ppl_base) * 100:.1f}%")
+    print("→ 把上面三个数记下来，填进 README 与 docs。")
+    print("  说明：这是单窗口截断式 PPL，仅用于同口径对比，绝对值会偏高。\n")
 
-    # 2. 同一问题生成对比
-    print("\n[3/3] 同一问题生成效果对比 ...")
+    # 同一问题生成对比
+    print("[3/3] 同一问题生成效果对比 ...")
     md = ["# 微调前后效果对比\n",
-          f"模型：{BASE_MODEL} + LoRA(r={8}) | 数据：2 万条中文指令\n", ""]
+          f"模型：{BASE_MODEL} + LoRA(r={8}) | 数据：2 万条中文指令\n",
+          f"PPL（评估集前 100 条）：原始 {ppl_base:.4f} → 微调后 {ppl_lora:.4f}"
+          f"（下降 {(1 - ppl_lora / ppl_base) * 100:.1f}%）\n", ""]
     for q in QUESTIONS:
-        a1 = generate(base_model, tokenizer, q)
-        a2 = generate(lora_model, tokenizer, q)
+        a1, a2 = base_answers[q], lora_answers[q]
         md.append(f"**Q：{q}**\n")
         md.append(f"- **原始模型**：{a1}\n")
         md.append(f"- **LoRA 微调后**：{a2}\n")
@@ -138,7 +148,7 @@ def main():
     with open(os.path.join("output", "comparison.md"), "w", encoding="utf-8") as f:
         f.write("\n".join(md))
     print("\n对比结果已保存：output/comparison.md")
-    print("（人工打分：把两组回答打印出来请同学/自己盲评，统计“微调回答更优”的占比）")
+    print("（人工打分：把两组回答打印出来盲评，统计“微调回答更优”的占比）")
 
 
 if __name__ == "__main__":

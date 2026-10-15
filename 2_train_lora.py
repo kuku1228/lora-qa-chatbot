@@ -69,7 +69,62 @@ lora_config = LoraConfig(
     task_type="CAUSAL_LM",
 )
 model = get_peft_model(model, lora_config)
-# 关键输出：可训练参数占比，正常应 <1%
+
+
+# ---------- 4.1 精确统计可训练参数量 ----------
+def print_exact_trainable(model):
+    """逐参数统计可训练量，并按目标模块汇总。
+
+    为什么不直接用 PEFT 的 print_trainable_parameters()：
+        它给的是估算值，而"可训练参数占比"是会被追问的数字，必须能按
+        Qwen2 的真实维度复算。这里直接遍历参数张量求和，结果是精确值，
+        并且能列出每个目标层各自贡献多少。
+    """
+    total = sum(p.numel() for p in model.parameters())
+    trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)
+
+    per_module = {}
+    for name, p in model.named_parameters():
+        if not p.requires_grad:
+            continue
+        module = next((t for t in TARGET_MODULES if f".{t}." in name), "其他")
+        per_module[module] = per_module.get(module, 0) + p.numel()
+
+    print("\n" + "=" * 62)
+    print("可训练参数统计（精确值）")
+    print("=" * 62)
+    print(f"  模型总参数   : {total:,}  ({total/1e9:.3f} B)")
+    print(f"  可训练参数   : {trainable:,}  ({trainable/1e4:.0f} 万)")
+    print(f"  可训练占比   : {trainable/total*100:.4f}%")
+    print(f"  冻结参数     : {total-trainable:,}")
+    if per_module:
+        n_layers = _count_layers(model)
+        print("-" * 62)
+        print("  各目标模块可训练参数明细：")
+        for m in sorted(per_module, key=lambda x: -per_module[x]):
+            print(f"    {m:12s} {per_module[m]:>12,}")
+        print(f"    {'单层合计':12s} {sum(per_module.values())/max(1, n_layers):>12,.0f}"
+              f"   （共 {n_layers} 层）")
+    print("=" * 62)
+    print("→ 记下『可训练参数』与『可训练占比』，用于替换文档中的估算值。\n")
+    return total, trainable
+
+
+def _count_layers(model) -> int:
+    """数模型层数（Qwen2-7B 为 28 层），用于算单层参数量。"""
+    for attr in ("model", "base_model"):
+        m = getattr(model, attr, None)
+        if m is None:
+            continue
+        inner = getattr(m, "model", m)
+        layers = getattr(inner, "layers", None)
+        if layers is not None:
+            return len(layers)
+    return 28
+
+
+print_exact_trainable(model)
+# PEFT 自带估算值一并打印，方便对照两者差异
 model.print_trainable_parameters()
 
 # ---------- 5. 数据格式化（Qwen2 Chat 模板） ----------
@@ -132,6 +187,23 @@ trainer = Trainer(
 # ---------- 7. 训练 ----------
 print("开始训练（3060 12GB 预计数小时，云端 T4 约 3-4 小时）...")
 trainer.train()
+
+# ---------- 7.1 训练显存实测 ----------
+if torch.cuda.is_available():
+    gpu_name = torch.cuda.get_device_properties(0).name
+    gpu_total = torch.cuda.get_device_properties(0).total_memory / 1024**3
+    peak_alloc = torch.cuda.max_memory_allocated() / 1024**3
+    peak_reserved = torch.cuda.max_memory_reserved() / 1024**3
+    print("\n" + "=" * 62)
+    print("训练显存实测（torch 统计）")
+    print("=" * 62)
+    print(f"  显卡               : {gpu_name}（共 {gpu_total:.1f} GB）")
+    print(f"  显存峰值 allocated : {peak_alloc:.2f} GB")
+    print(f"  显存峰值 reserved  : {peak_reserved:.2f} GB")
+    print(f"  峰值占卡容量       : {peak_reserved/gpu_total*100:.1f}%")
+    print("=" * 62)
+    print("→ 记下『显存峰值』，替换文档里的估算值。")
+    print("  要给出『较全量 fp16 下降 X%』的对照，另跑 tools/baseline_fp16.py。\n")
 
 # ---------- 8. 保存 LoRA adapter（不含基座权重，约 15MB） ----------
 os.makedirs(ADAPTER_DIR, exist_ok=True)

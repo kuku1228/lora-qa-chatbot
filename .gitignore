@@ -60,6 +60,15 @@ vllm.log
 lora_output.zip
 *.log
 
+# 例外：实测结果要做为证据随仓库发布，上面的规则不适用于它
+!docs/实测结果/**
+!docs/实测结果/*.log
+!docs/实测结果/*.csv
+
+# 评测对照产物（本地自检用，不随仓库发布）
+output/agent_eval_naive.md
+output/agent_eval_naive.json
+
 # HuggingFace / ModelScope 本地缓存与下载的基座模型
 .cache/
 models/

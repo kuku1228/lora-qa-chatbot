@@ -1,26 +1,30 @@
 {
-  "backend": "oracle",
+  "backend": "openai",
   "summary": {
     "n": 30,
-    "tool_acc": 100.0,
-    "decision_acc": 100.0,
-    "should_call_acc": 100.0,
-    "should_not_call_acc": 100.0,
-    "false_call_rate": 0.0,
-    "miss_call_rate": 0.0,
-    "reasons": {},
+    "tool_acc": 66.66666666666666,
+    "decision_acc": 66.66666666666666,
+    "should_call_acc": 58.333333333333336,
+    "should_not_call_acc": 72.22222222222221,
+    "false_call_rate": 27.77777777777778,
+    "miss_call_rate": 33.33333333333333,
+    "reasons": {
+      "漏调用（该调却没调）": 4,
+      "工具选错": 1,
+      "误调用（不该调却调了）": 5
+    },
     "by_cat": {
-      "该调·计算器": 100.0,
-      "该调·时间": 100.0,
+      "该调·计算器": 80.0,
+      "该调·时间": 0.0,
       "该调·网页": 100.0,
       "多步·先工具后回答": 100.0,
-      "多步·工具链": 100.0,
-      "不该调·历史指代": 100.0,
+      "多步·工具链": 0.0,
+      "不该调·历史指代": 75.0,
       "不该调·知识问答": 100.0,
-      "不该调·网页越界": 100.0,
+      "不该调·网页越界": 33.33333333333333,
       "不该调·闲聊": 100.0,
-      "边界·先追问": 100.0,
-      "边界·超出工具能力": 100.0
+      "边界·先追问": 0.0,
+      "边界·超出工具能力": 0.0
     },
     "cat_counts": {
       "该调·计算器": 5,
@@ -35,8 +39,7 @@
       "边界·先追问": 1,
       "边界·超出工具能力": 1
     },
-    "hit_max_steps": 0,
-    "errors": 0
+    "max_steps_hits": 0
   },
   "rows": [
     {
@@ -74,8 +77,7 @@
       "steps": 2,
       "hit_max_steps": false,
       "failure_mode": "漏调用：该用工具却直接凭模型口算",
-      "note": "项目 README 里的示例问题",
-      "error": ""
+      "note": "项目 README 里的示例问题"
     },
     {
       "cid": "C02",
@@ -99,7 +101,7 @@
         [
           "calculator",
           {
-            "expression": "128 * 37 + 466"
+            "expression": "128*37+466"
           }
         ]
       ],
@@ -112,8 +114,7 @@
       "steps": 2,
       "hit_max_steps": false,
       "failure_mode": "漏调用：该用工具却直接凭模型口算",
-      "note": "",
-      "error": ""
+      "note": ""
     },
     {
       "cid": "C03",
@@ -150,8 +151,7 @@
       "steps": 2,
       "hit_max_steps": false,
       "failure_mode": "漏调用；且需要把自然语言转成表达式",
-      "note": "",
-      "error": ""
+      "note": ""
     },
     {
       "cid": "C04",
@@ -160,9 +160,7 @@
       "expect": [
         "calculator"
       ],
-      "got": [
-        "calculator"
-      ],
+      "got": [],
       "expect_args": [
         [
           "calculator",
@@ -171,25 +169,17 @@
           }
         ]
       ],
-      "got_args": [
-        [
-          "calculator",
-          {
-            "expression": "17 % 4"
-          }
-        ]
-      ],
-      "tool_ok": true,
-      "args_ok": true,
-      "correct": true,
+      "got_args": [],
+      "tool_ok": false,
+      "args_ok": false,
+      "correct": false,
       "should_call": true,
-      "untouched": false,
+      "untouched": true,
       "extra_calls": [],
-      "steps": 2,
+      "steps": 1,
       "hit_max_steps": false,
       "failure_mode": "漏调用；需要识别“取余”对应 % 运算符",
-      "note": "",
-      "error": ""
+      "note": ""
     },
     {
       "cid": "C05",
@@ -226,8 +216,7 @@
       "steps": 2,
       "hit_max_steps": false,
       "failure_mode": "漏调用；含浮点与括号",
-      "note": "",
-      "error": ""
+      "note": ""
     },
     {
       "cid": "C06",
@@ -236,32 +225,24 @@
       "expect": [
         "get_current_time"
       ],
-      "got": [
-        "get_current_time"
-      ],
+      "got": [],
       "expect_args": [
         [
           "get_current_time",
           {}
         ]
       ],
-      "got_args": [
-        [
-          "get_current_time",
-          {}
-        ]
-      ],
-      "tool_ok": true,
-      "args_ok": true,
-      "correct": true,
+      "got_args": [],
+      "tool_ok": false,
+      "args_ok": false,
+      "correct": false,
       "should_call": true,
-      "untouched": false,
+      "untouched": true,
       "extra_calls": [],
-      "steps": 2,
+      "steps": 1,
       "hit_max_steps": false,
       "failure_mode": "漏调用：模型没有实时信息却直接编时间",
-      "note": "",
-      "error": ""
+      "note": ""
     },
     {
       "cid": "C07",
@@ -270,32 +251,24 @@
       "expect": [
         "get_current_time"
       ],
-      "got": [
-        "get_current_time"
-      ],
+      "got": [],
       "expect_args": [
         [
           "get_current_time",
           {}
         ]
       ],
-      "got_args": [
-        [
-          "get_current_time",
-          {}
-        ]
-      ],
-      "tool_ok": true,
-      "args_ok": true,
-      "correct": true,
+      "got_args": [],
+      "tool_ok": false,
+      "args_ok": false,
+      "correct": false,
       "should_call": true,
-      "untouched": false,
+      "untouched": true,
       "extra_calls": [],
-      "steps": 2,
+      "steps": 1,
       "hit_max_steps": false,
       "failure_mode": "漏调用",
-      "note": "",
-      "error": ""
+      "note": ""
     },
     {
       "cid": "C08",
@@ -304,32 +277,24 @@
       "expect": [
         "get_current_time"
       ],
-      "got": [
-        "get_current_time"
-      ],
+      "got": [],
       "expect_args": [
         [
           "get_current_time",
           {}
         ]
       ],
-      "got_args": [
-        [
-          "get_current_time",
-          {}
-        ]
-      ],
-      "tool_ok": true,
-      "args_ok": true,
-      "correct": true,
+      "got_args": [],
+      "tool_ok": false,
+      "args_ok": false,
+      "correct": false,
       "should_call": true,
-      "untouched": false,
+      "untouched": true,
       "extra_calls": [],
-      "steps": 2,
+      "steps": 1,
       "hit_max_steps": false,
       "failure_mode": "漏调用",
-      "note": "",
-      "error": ""
+      "note": ""
     },
     {
       "cid": "C09",
@@ -353,7 +318,8 @@
         [
           "fetch_url",
           {
-            "url": "https://www.python.org"
+            "url": "https://www.python.org",
+            "max_chars": 2000
           }
         ]
       ],
@@ -366,8 +332,7 @@
       "steps": 2,
       "hit_max_steps": false,
       "failure_mode": "漏调用；或调用但漏掉/写错 URL 参数",
-      "note": "",
-      "error": ""
+      "note": ""
     },
     {
       "cid": "C10",
@@ -391,7 +356,8 @@
         [
           "fetch_url",
           {
-            "url": "https://example.com"
+            "url": "https://example.com",
+            "max_chars": 2000
           }
         ]
       ],
@@ -404,8 +370,7 @@
       "steps": 2,
       "hit_max_steps": false,
       "failure_mode": "漏调用；或把 URL 当自由文本处理",
-      "note": "",
-      "error": ""
+      "note": ""
     },
     {
       "cid": "C11",
@@ -438,8 +403,7 @@
       "steps": 2,
       "hit_max_steps": false,
       "failure_mode": "漏调用；或拿到 Observation 后不继续输出最终答案",
-      "note": "",
-      "error": ""
+      "note": ""
     },
     {
       "cid": "C12",
@@ -450,7 +414,6 @@
         "calculator"
       ],
       "got": [
-        "calculator",
         "calculator"
       ],
       "expect_args": [
@@ -471,27 +434,20 @@
         [
           "calculator",
           {
-            "expression": "25*4"
-          }
-        ],
-        [
-          "calculator",
-          {
-            "expression": "300/6"
+            "expression": "25*4+300/6"
           }
         ]
       ],
-      "tool_ok": true,
-      "args_ok": true,
-      "correct": true,
+      "tool_ok": false,
+      "args_ok": false,
+      "correct": false,
       "should_call": true,
       "untouched": false,
       "extra_calls": [],
-      "steps": 3,
+      "steps": 2,
       "hit_max_steps": false,
       "failure_mode": "只完成第一步就结束（Observation 后未继续决策）",
-      "note": "",
-      "error": ""
+      "note": ""
     },
     {
       "cid": "C13",
@@ -510,28 +466,35 @@
       "steps": 1,
       "hit_max_steps": false,
       "failure_mode": "误调用：把对话指代当成需要外部信息的任务",
-      "note": "",
-      "error": ""
+      "note": ""
     },
     {
       "cid": "C14",
       "category": "不该调·历史指代",
       "query": "我刚才问的第一个问题是什么",
       "expect": [],
-      "got": [],
+      "got": [
+        "get_previous_message"
+      ],
       "expect_args": [],
-      "got_args": [],
-      "tool_ok": true,
-      "args_ok": true,
-      "correct": true,
+      "got_args": [
+        [
+          "get_previous_message",
+          {}
+        ]
+      ],
+      "tool_ok": false,
+      "args_ok": false,
+      "correct": false,
       "should_call": false,
-      "untouched": true,
-      "extra_calls": [],
-      "steps": 1,
+      "untouched": false,
+      "extra_calls": [
+        "get_previous_message"
+      ],
+      "steps": 2,
       "hit_max_steps": false,
       "failure_mode": "误调用",
-      "note": "",
-      "error": ""
+      "note": ""
     },
     {
       "cid": "C15",
@@ -550,8 +513,7 @@
       "steps": 1,
       "hit_max_steps": false,
       "failure_mode": "误调用：历史信息已在上下文里",
-      "note": "",
-      "error": ""
+      "note": ""
     },
     {
       "cid": "C16",
@@ -570,8 +532,7 @@
       "steps": 1,
       "hit_max_steps": false,
       "failure_mode": "误调用",
-      "note": "",
-      "error": ""
+      "note": ""
     },
     {
       "cid": "C17",
@@ -590,8 +551,7 @@
       "steps": 1,
       "hit_max_steps": false,
       "failure_mode": "误调用：模型自身知识即可回答",
-      "note": "",
-      "error": ""
+      "note": ""
     },
     {
       "cid": "C18",
@@ -610,8 +570,7 @@
       "steps": 1,
       "hit_max_steps": false,
       "failure_mode": "误调用",
-      "note": "",
-      "error": ""
+      "note": ""
     },
     {
       "cid": "C19",
@@ -630,8 +589,7 @@
       "steps": 1,
       "hit_max_steps": false,
       "failure_mode": "误调用",
-      "note": "",
-      "error": ""
+      "note": ""
     },
     {
       "cid": "C20",
@@ -650,8 +608,7 @@
       "steps": 1,
       "hit_max_steps": false,
       "failure_mode": "误调用：关键词触发（含“计算”二字但不是算题）",
-      "note": "",
-      "error": ""
+      "note": ""
     },
     {
       "cid": "C21",
@@ -670,48 +627,69 @@
       "steps": 1,
       "hit_max_steps": false,
       "failure_mode": "误调用：关键词触发",
-      "note": "",
-      "error": ""
+      "note": ""
     },
     {
       "cid": "C22",
       "category": "不该调·网页越界",
       "query": "帮我查一下 Flask 的最新版本",
       "expect": [],
-      "got": [],
+      "got": [
+        "fetch_url"
+      ],
       "expect_args": [],
-      "got_args": [],
-      "tool_ok": true,
-      "args_ok": true,
-      "correct": true,
+      "got_args": [
+        [
+          "fetch_url",
+          {
+            "url": "https://pypi.org/project/Flask/",
+            "max_chars": 2000
+          }
+        ]
+      ],
+      "tool_ok": false,
+      "args_ok": false,
+      "correct": false,
       "should_call": false,
-      "untouched": true,
-      "extra_calls": [],
-      "steps": 1,
+      "untouched": false,
+      "extra_calls": [
+        "fetch_url"
+      ],
+      "steps": 2,
       "hit_max_steps": false,
       "failure_mode": "误调用：没给 URL，模型可能编造链接去抓",
-      "note": "",
-      "error": ""
+      "note": ""
     },
     {
       "cid": "C23",
       "category": "不该调·网页越界",
       "query": "去网上搜一下今天有什么新闻",
       "expect": [],
-      "got": [],
+      "got": [
+        "fetch_url"
+      ],
       "expect_args": [],
-      "got_args": [],
-      "tool_ok": true,
-      "args_ok": true,
-      "correct": true,
+      "got_args": [
+        [
+          "fetch_url",
+          {
+            "url": "https://www.cnn.com/",
+            "max_chars": 2000
+          }
+        ]
+      ],
+      "tool_ok": false,
+      "args_ok": false,
+      "correct": false,
       "should_call": false,
-      "untouched": true,
-      "extra_calls": [],
-      "steps": 1,
+      "untouched": false,
+      "extra_calls": [
+        "fetch_url"
+      ],
+      "steps": 2,
       "hit_max_steps": false,
       "failure_mode": "误调用：fetch_url 不是搜索引擎，且未给 URL",
-      "note": "",
-      "error": ""
+      "note": ""
     },
     {
       "cid": "C24",
@@ -730,8 +708,7 @@
       "steps": 1,
       "hit_max_steps": false,
       "failure_mode": "误调用：需要检索能力，超出工具范围，应说明局限",
-      "note": "",
-      "error": ""
+      "note": ""
     },
     {
       "cid": "C25",
@@ -750,8 +727,7 @@
       "steps": 1,
       "hit_max_steps": false,
       "failure_mode": "误调用：寒暄不需要任何工具",
-      "note": "",
-      "error": ""
+      "note": ""
     },
     {
       "cid": "C26",
@@ -770,8 +746,7 @@
       "steps": 1,
       "hit_max_steps": false,
       "failure_mode": "误调用：应介绍自身能力而不是去调工具",
-      "note": "",
-      "error": ""
+      "note": ""
     },
     {
       "cid": "C27",
@@ -790,8 +765,7 @@
       "steps": 1,
       "hit_max_steps": false,
       "failure_mode": "误调用",
-      "note": "",
-      "error": ""
+      "note": ""
     },
     {
       "cid": "C28",
@@ -810,48 +784,68 @@
       "steps": 1,
       "hit_max_steps": false,
       "failure_mode": "误调用：极简算式无需工具（本项目的提示词要求简单问题直接回答）",
-      "note": "",
-      "error": ""
+      "note": ""
     },
     {
       "cid": "C29",
       "category": "边界·先追问",
       "query": "帮我算一下那个数",
       "expect": [],
-      "got": [],
+      "got": [
+        "calculator"
+      ],
       "expect_args": [],
-      "got_args": [],
-      "tool_ok": true,
-      "args_ok": true,
-      "correct": true,
+      "got_args": [
+        [
+          "calculator",
+          {
+            "expression": "2*(3+4)"
+          }
+        ]
+      ],
+      "tool_ok": false,
+      "args_ok": false,
+      "correct": false,
       "should_call": false,
-      "untouched": true,
-      "extra_calls": [],
-      "steps": 1,
+      "untouched": false,
+      "extra_calls": [
+        "calculator"
+      ],
+      "steps": 2,
       "hit_max_steps": false,
       "failure_mode": "误调用：指代不明且无具体表达式，应该先追问",
-      "note": "",
-      "error": ""
+      "note": ""
     },
     {
       "cid": "C30",
       "category": "边界·超出工具能力",
       "query": "帮我把这篇 PDF 里的表格提取出来",
       "expect": [],
-      "got": [],
+      "got": [
+        "fetch_url"
+      ],
       "expect_args": [],
-      "got_args": [],
-      "tool_ok": true,
-      "args_ok": true,
-      "correct": true,
+      "got_args": [
+        [
+          "fetch_url",
+          {
+            "url": "https://example.com/table.pdf",
+            "max_chars": 2000
+          }
+        ]
+      ],
+      "tool_ok": false,
+      "args_ok": false,
+      "correct": false,
       "should_call": false,
-      "untouched": true,
-      "extra_calls": [],
-      "steps": 1,
+      "untouched": false,
+      "extra_calls": [
+        "fetch_url"
+      ],
+      "steps": 2,
       "hit_max_steps": false,
       "failure_mode": "误调用：工具集不支持文件处理，应说明能力边界",
-      "note": "",
-      "error": ""
+      "note": ""
     }
   ]
 }

@@ -1,0 +1,8 @@
+{
+  "base_ppl": 20.17499351501465,
+  "lora_ppl": 3.522977113723755,
+  "drop_pct": 82.53790212570883,
+  "eval_n": 100,
+  "model": "models/Qwen2-7B-Instruct",
+  "adapter": "output/lora-qwen2/final"
+}

@@ -1,0 +1,857 @@
+{
+  "backend": "oracle",
+  "summary": {
+    "n": 30,
+    "tool_acc": 100.0,
+    "decision_acc": 100.0,
+    "should_call_acc": 100.0,
+    "should_not_call_acc": 100.0,
+    "false_call_rate": 0.0,
+    "miss_call_rate": 0.0,
+    "reasons": {},
+    "by_cat": {
+      "该调·计算器": 100.0,
+      "该调·时间": 100.0,
+      "该调·网页": 100.0,
+      "多步·先工具后回答": 100.0,
+      "多步·工具链": 100.0,
+      "不该调·历史指代": 100.0,
+      "不该调·知识问答": 100.0,
+      "不该调·网页越界": 100.0,
+      "不该调·闲聊": 100.0,
+      "边界·先追问": 100.0,
+      "边界·超出工具能力": 100.0
+    },
+    "cat_counts": {
+      "该调·计算器": 5,
+      "该调·时间": 3,
+      "该调·网页": 2,
+      "多步·先工具后回答": 1,
+      "多步·工具链": 1,
+      "不该调·历史指代": 4,
+      "不该调·知识问答": 5,
+      "不该调·网页越界": 3,
+      "不该调·闲聊": 4,
+      "边界·先追问": 1,
+      "边界·超出工具能力": 1
+    },
+    "hit_max_steps": 0,
+    "errors": 0
+  },
+  "rows": [
+    {
+      "cid": "C01",
+      "category": "该调·计算器",
+      "query": "帮我算一下 (23+67)*45 等于多少",
+      "expect": [
+        "calculator"
+      ],
+      "got": [
+        "calculator"
+      ],
+      "expect_args": [
+        [
+          "calculator",
+          {
+            "expression": "(23+67)*45"
+          }
+        ]
+      ],
+      "got_args": [
+        [
+          "calculator",
+          {
+            "expression": "(23+67)*45"
+          }
+        ]
+      ],
+      "tool_ok": true,
+      "args_ok": true,
+      "correct": true,
+      "should_call": true,
+      "untouched": false,
+      "extra_calls": [],
+      "steps": 2,
+      "hit_max_steps": false,
+      "failure_mode": "漏调用：该用工具却直接凭模型口算",
+      "note": "项目 README 里的示例问题",
+      "error": ""
+    },
+    {
+      "cid": "C02",
+      "category": "该调·计算器",
+      "query": "计算 128 * 37 + 466",
+      "expect": [
+        "calculator"
+      ],
+      "got": [
+        "calculator"
+      ],
+      "expect_args": [
+        [
+          "calculator",
+          {
+            "expression": "128 * 37 + 466"
+          }
+        ]
+      ],
+      "got_args": [
+        [
+          "calculator",
+          {
+            "expression": "128 * 37 + 466"
+          }
+        ]
+      ],
+      "tool_ok": true,
+      "args_ok": true,
+      "correct": true,
+      "should_call": true,
+      "untouched": false,
+      "extra_calls": [],
+      "steps": 2,
+      "hit_max_steps": false,
+      "failure_mode": "漏调用：该用工具却直接凭模型口算",
+      "note": "",
+      "error": ""
+    },
+    {
+      "cid": "C03",
+      "category": "该调·计算器",
+      "query": "12 的 5 次方是多少",
+      "expect": [
+        "calculator"
+      ],
+      "got": [
+        "calculator"
+      ],
+      "expect_args": [
+        [
+          "calculator",
+          {
+            "expression": "12**5"
+          }
+        ]
+      ],
+      "got_args": [
+        [
+          "calculator",
+          {
+            "expression": "12**5"
+          }
+        ]
+      ],
+      "tool_ok": true,
+      "args_ok": true,
+      "correct": true,
+      "should_call": true,
+      "untouched": false,
+      "extra_calls": [],
+      "steps": 2,
+      "hit_max_steps": false,
+      "failure_mode": "漏调用；且需要把自然语言转成表达式",
+      "note": "",
+      "error": ""
+    },
+    {
+      "cid": "C04",
+      "category": "该调·计算器",
+      "query": "17 除以 4 的余数是多少",
+      "expect": [
+        "calculator"
+      ],
+      "got": [
+        "calculator"
+      ],
+      "expect_args": [
+        [
+          "calculator",
+          {
+            "expression": "17 % 4"
+          }
+        ]
+      ],
+      "got_args": [
+        [
+          "calculator",
+          {
+            "expression": "17 % 4"
+          }
+        ]
+      ],
+      "tool_ok": true,
+      "args_ok": true,
+      "correct": true,
+      "should_call": true,
+      "untouched": false,
+      "extra_calls": [],
+      "steps": 2,
+      "hit_max_steps": false,
+      "failure_mode": "漏调用；需要识别“取余”对应 % 运算符",
+      "note": "",
+      "error": ""
+    },
+    {
+      "cid": "C05",
+      "category": "该调·计算器",
+      "query": "3.5 * (8 - 2.5) 等于几",
+      "expect": [
+        "calculator"
+      ],
+      "got": [
+        "calculator"
+      ],
+      "expect_args": [
+        [
+          "calculator",
+          {
+            "expression": "3.5 * (8 - 2.5)"
+          }
+        ]
+      ],
+      "got_args": [
+        [
+          "calculator",
+          {
+            "expression": "3.5 * (8 - 2.5)"
+          }
+        ]
+      ],
+      "tool_ok": true,
+      "args_ok": true,
+      "correct": true,
+      "should_call": true,
+      "untouched": false,
+      "extra_calls": [],
+      "steps": 2,
+      "hit_max_steps": false,
+      "failure_mode": "漏调用；含浮点与括号",
+      "note": "",
+      "error": ""
+    },
+    {
+      "cid": "C06",
+      "category": "该调·时间",
+      "query": "现在几点了",
+      "expect": [
+        "get_current_time"
+      ],
+      "got": [
+        "get_current_time"
+      ],
+      "expect_args": [
+        [
+          "get_current_time",
+          {}
+        ]
+      ],
+      "got_args": [
+        [
+          "get_current_time",
+          {}
+        ]
+      ],
+      "tool_ok": true,
+      "args_ok": true,
+      "correct": true,
+      "should_call": true,
+      "untouched": false,
+      "extra_calls": [],
+      "steps": 2,
+      "hit_max_steps": false,
+      "failure_mode": "漏调用：模型没有实时信息却直接编时间",
+      "note": "",
+      "error": ""
+    },
+    {
+      "cid": "C07",
+      "category": "该调·时间",
+      "query": "今天星期几",
+      "expect": [
+        "get_current_time"
+      ],
+      "got": [
+        "get_current_time"
+      ],
+      "expect_args": [
+        [
+          "get_current_time",
+          {}
+        ]
+      ],
+      "got_args": [
+        [
+          "get_current_time",
+          {}
+        ]
+      ],
+      "tool_ok": true,
+      "args_ok": true,
+      "correct": true,
+      "should_call": true,
+      "untouched": false,
+      "extra_calls": [],
+      "steps": 2,
+      "hit_max_steps": false,
+      "failure_mode": "漏调用",
+      "note": "",
+      "error": ""
+    },
+    {
+      "cid": "C08",
+      "category": "该调·时间",
+      "query": "今天几号？",
+      "expect": [
+        "get_current_time"
+      ],
+      "got": [
+        "get_current_time"
+      ],
+      "expect_args": [
+        [
+          "get_current_time",
+          {}
+        ]
+      ],
+      "got_args": [
+        [
+          "get_current_time",
+          {}
+        ]
+      ],
+      "tool_ok": true,
+      "args_ok": true,
+      "correct": true,
+      "should_call": true,
+      "untouched": false,
+      "extra_calls": [],
+      "steps": 2,
+      "hit_max_steps": false,
+      "failure_mode": "漏调用",
+      "note": "",
+      "error": ""
+    },
+    {
+      "cid": "C09",
+      "category": "该调·网页",
+      "query": "帮我看一下 https://www.python.org 这个页面上写了什么",
+      "expect": [
+        "fetch_url"
+      ],
+      "got": [
+        "fetch_url"
+      ],
+      "expect_args": [
+        [
+          "fetch_url",
+          {
+            "url": "https://www.python.org"
+          }
+        ]
+      ],
+      "got_args": [
+        [
+          "fetch_url",
+          {
+            "url": "https://www.python.org"
+          }
+        ]
+      ],
+      "tool_ok": true,
+      "args_ok": true,
+      "correct": true,
+      "should_call": true,
+      "untouched": false,
+      "extra_calls": [],
+      "steps": 2,
+      "hit_max_steps": false,
+      "failure_mode": "漏调用；或调用但漏掉/写错 URL 参数",
+      "note": "",
+      "error": ""
+    },
+    {
+      "cid": "C10",
+      "category": "该调·网页",
+      "query": "读一下 https://example.com 的正文内容",
+      "expect": [
+        "fetch_url"
+      ],
+      "got": [
+        "fetch_url"
+      ],
+      "expect_args": [
+        [
+          "fetch_url",
+          {
+            "url": "https://example.com"
+          }
+        ]
+      ],
+      "got_args": [
+        [
+          "fetch_url",
+          {
+            "url": "https://example.com"
+          }
+        ]
+      ],
+      "tool_ok": true,
+      "args_ok": true,
+      "correct": true,
+      "should_call": true,
+      "untouched": false,
+      "extra_calls": [],
+      "steps": 2,
+      "hit_max_steps": false,
+      "failure_mode": "漏调用；或把 URL 当自由文本处理",
+      "note": "",
+      "error": ""
+    },
+    {
+      "cid": "C11",
+      "category": "多步·先工具后回答",
+      "query": "先帮我查一下现在的时间，然后告诉我这个时间点适合做什么",
+      "expect": [
+        "get_current_time"
+      ],
+      "got": [
+        "get_current_time"
+      ],
+      "expect_args": [
+        [
+          "get_current_time",
+          {}
+        ]
+      ],
+      "got_args": [
+        [
+          "get_current_time",
+          {}
+        ]
+      ],
+      "tool_ok": true,
+      "args_ok": true,
+      "correct": true,
+      "should_call": true,
+      "untouched": false,
+      "extra_calls": [],
+      "steps": 2,
+      "hit_max_steps": false,
+      "failure_mode": "漏调用；或拿到 Observation 后不继续输出最终答案",
+      "note": "",
+      "error": ""
+    },
+    {
+      "cid": "C12",
+      "category": "多步·工具链",
+      "query": "先算 25*4，再算 300/6",
+      "expect": [
+        "calculator",
+        "calculator"
+      ],
+      "got": [
+        "calculator",
+        "calculator"
+      ],
+      "expect_args": [
+        [
+          "calculator",
+          {
+            "expression": "25*4"
+          }
+        ],
+        [
+          "calculator",
+          {
+            "expression": "300/6"
+          }
+        ]
+      ],
+      "got_args": [
+        [
+          "calculator",
+          {
+            "expression": "25*4"
+          }
+        ],
+        [
+          "calculator",
+          {
+            "expression": "300/6"
+          }
+        ]
+      ],
+      "tool_ok": true,
+      "args_ok": true,
+      "correct": true,
+      "should_call": true,
+      "untouched": false,
+      "extra_calls": [],
+      "steps": 3,
+      "hit_max_steps": false,
+      "failure_mode": "只完成第一步就结束（Observation 后未继续决策）",
+      "note": "",
+      "error": ""
+    },
+    {
+      "cid": "C13",
+      "category": "不该调·历史指代",
+      "query": "我上一个问题是什么？",
+      "expect": [],
+      "got": [],
+      "expect_args": [],
+      "got_args": [],
+      "tool_ok": true,
+      "args_ok": true,
+      "correct": true,
+      "should_call": false,
+      "untouched": true,
+      "extra_calls": [],
+      "steps": 1,
+      "hit_max_steps": false,
+      "failure_mode": "误调用：把对话指代当成需要外部信息的任务",
+      "note": "",
+      "error": ""
+    },
+    {
+      "cid": "C14",
+      "category": "不该调·历史指代",
+      "query": "我刚才问的第一个问题是什么",
+      "expect": [],
+      "got": [],
+      "expect_args": [],
+      "got_args": [],
+      "tool_ok": true,
+      "args_ok": true,
+      "correct": true,
+      "should_call": false,
+      "untouched": true,
+      "extra_calls": [],
+      "steps": 1,
+      "hit_max_steps": false,
+      "failure_mode": "误调用",
+      "note": "",
+      "error": ""
+    },
+    {
+      "cid": "C15",
+      "category": "不该调·历史指代",
+      "query": "刚才那个问题的答案再说一遍",
+      "expect": [],
+      "got": [],
+      "expect_args": [],
+      "got_args": [],
+      "tool_ok": true,
+      "args_ok": true,
+      "correct": true,
+      "should_call": false,
+      "untouched": true,
+      "extra_calls": [],
+      "steps": 1,
+      "hit_max_steps": false,
+      "failure_mode": "误调用：历史信息已在上下文里",
+      "note": "",
+      "error": ""
+    },
+    {
+      "cid": "C16",
+      "category": "不该调·历史指代",
+      "query": "我们最开始聊的是什么",
+      "expect": [],
+      "got": [],
+      "expect_args": [],
+      "got_args": [],
+      "tool_ok": true,
+      "args_ok": true,
+      "correct": true,
+      "should_call": false,
+      "untouched": true,
+      "extra_calls": [],
+      "steps": 1,
+      "hit_max_steps": false,
+      "failure_mode": "误调用",
+      "note": "",
+      "error": ""
+    },
+    {
+      "cid": "C17",
+      "category": "不该调·知识问答",
+      "query": "什么是机器学习中的过拟合？",
+      "expect": [],
+      "got": [],
+      "expect_args": [],
+      "got_args": [],
+      "tool_ok": true,
+      "args_ok": true,
+      "correct": true,
+      "should_call": false,
+      "untouched": true,
+      "extra_calls": [],
+      "steps": 1,
+      "hit_max_steps": false,
+      "failure_mode": "误调用：模型自身知识即可回答",
+      "note": "",
+      "error": ""
+    },
+    {
+      "cid": "C18",
+      "category": "不该调·知识问答",
+      "query": "简单解释一下 LoRA 微调的原理。",
+      "expect": [],
+      "got": [],
+      "expect_args": [],
+      "got_args": [],
+      "tool_ok": true,
+      "args_ok": true,
+      "correct": true,
+      "should_call": false,
+      "untouched": true,
+      "extra_calls": [],
+      "steps": 1,
+      "hit_max_steps": false,
+      "failure_mode": "误调用",
+      "note": "",
+      "error": ""
+    },
+    {
+      "cid": "C19",
+      "category": "不该调·知识问答",
+      "query": "Python 中列表和元组的区别是什么？",
+      "expect": [],
+      "got": [],
+      "expect_args": [],
+      "got_args": [],
+      "tool_ok": true,
+      "args_ok": true,
+      "correct": true,
+      "should_call": false,
+      "untouched": true,
+      "extra_calls": [],
+      "steps": 1,
+      "hit_max_steps": false,
+      "failure_mode": "误调用",
+      "note": "",
+      "error": ""
+    },
+    {
+      "cid": "C20",
+      "category": "不该调·知识问答",
+      "query": "计算复杂度是什么概念？",
+      "expect": [],
+      "got": [],
+      "expect_args": [],
+      "got_args": [],
+      "tool_ok": true,
+      "args_ok": true,
+      "correct": true,
+      "should_call": false,
+      "untouched": true,
+      "extra_calls": [],
+      "steps": 1,
+      "hit_max_steps": false,
+      "failure_mode": "误调用：关键词触发（含“计算”二字但不是算题）",
+      "note": "",
+      "error": ""
+    },
+    {
+      "cid": "C21",
+      "category": "不该调·知识问答",
+      "query": "矩阵乘法的计算规则是怎样的？",
+      "expect": [],
+      "got": [],
+      "expect_args": [],
+      "got_args": [],
+      "tool_ok": true,
+      "args_ok": true,
+      "correct": true,
+      "should_call": false,
+      "untouched": true,
+      "extra_calls": [],
+      "steps": 1,
+      "hit_max_steps": false,
+      "failure_mode": "误调用：关键词触发",
+      "note": "",
+      "error": ""
+    },
+    {
+      "cid": "C22",
+      "category": "不该调·网页越界",
+      "query": "帮我查一下 Flask 的最新版本",
+      "expect": [],
+      "got": [],
+      "expect_args": [],
+      "got_args": [],
+      "tool_ok": true,
+      "args_ok": true,
+      "correct": true,
+      "should_call": false,
+      "untouched": true,
+      "extra_calls": [],
+      "steps": 1,
+      "hit_max_steps": false,
+      "failure_mode": "误调用：没给 URL，模型可能编造链接去抓",
+      "note": "",
+      "error": ""
+    },
+    {
+      "cid": "C23",
+      "category": "不该调·网页越界",
+      "query": "去网上搜一下今天有什么新闻",
+      "expect": [],
+      "got": [],
+      "expect_args": [],
+      "got_args": [],
+      "tool_ok": true,
+      "args_ok": true,
+      "correct": true,
+      "should_call": false,
+      "untouched": true,
+      "extra_calls": [],
+      "steps": 1,
+      "hit_max_steps": false,
+      "failure_mode": "误调用：fetch_url 不是搜索引擎，且未给 URL",
+      "note": "",
+      "error": ""
+    },
+    {
+      "cid": "C24",
+      "category": "不该调·网页越界",
+      "query": "最近大模型领域有什么新进展？",
+      "expect": [],
+      "got": [],
+      "expect_args": [],
+      "got_args": [],
+      "tool_ok": true,
+      "args_ok": true,
+      "correct": true,
+      "should_call": false,
+      "untouched": true,
+      "extra_calls": [],
+      "steps": 1,
+      "hit_max_steps": false,
+      "failure_mode": "误调用：需要检索能力，超出工具范围，应说明局限",
+      "note": "",
+      "error": ""
+    },
+    {
+      "cid": "C25",
+      "category": "不该调·闲聊",
+      "query": "你好",
+      "expect": [],
+      "got": [],
+      "expect_args": [],
+      "got_args": [],
+      "tool_ok": true,
+      "args_ok": true,
+      "correct": true,
+      "should_call": false,
+      "untouched": true,
+      "extra_calls": [],
+      "steps": 1,
+      "hit_max_steps": false,
+      "failure_mode": "误调用：寒暄不需要任何工具",
+      "note": "",
+      "error": ""
+    },
+    {
+      "cid": "C26",
+      "category": "不该调·闲聊",
+      "query": "你都能做什么？",
+      "expect": [],
+      "got": [],
+      "expect_args": [],
+      "got_args": [],
+      "tool_ok": true,
+      "args_ok": true,
+      "correct": true,
+      "should_call": false,
+      "untouched": true,
+      "extra_calls": [],
+      "steps": 1,
+      "hit_max_steps": false,
+      "failure_mode": "误调用：应介绍自身能力而不是去调工具",
+      "note": "",
+      "error": ""
+    },
+    {
+      "cid": "C27",
+      "category": "不该调·闲聊",
+      "query": "谢谢你",
+      "expect": [],
+      "got": [],
+      "expect_args": [],
+      "got_args": [],
+      "tool_ok": true,
+      "args_ok": true,
+      "correct": true,
+      "should_call": false,
+      "untouched": true,
+      "extra_calls": [],
+      "steps": 1,
+      "hit_max_steps": false,
+      "failure_mode": "误调用",
+      "note": "",
+      "error": ""
+    },
+    {
+      "cid": "C28",
+      "category": "不该调·闲聊",
+      "query": "1+1 等于几",
+      "expect": [],
+      "got": [],
+      "expect_args": [],
+      "got_args": [],
+      "tool_ok": true,
+      "args_ok": true,
+      "correct": true,
+      "should_call": false,
+      "untouched": true,
+      "extra_calls": [],
+      "steps": 1,
+      "hit_max_steps": false,
+      "failure_mode": "误调用：极简算式无需工具（本项目的提示词要求简单问题直接回答）",
+      "note": "",
+      "error": ""
+    },
+    {
+      "cid": "C29",
+      "category": "边界·先追问",
+      "query": "帮我算一下那个数",
+      "expect": [],
+      "got": [],
+      "expect_args": [],
+      "got_args": [],
+      "tool_ok": true,
+      "args_ok": true,
+      "correct": true,
+      "should_call": false,
+      "untouched": true,
+      "extra_calls": [],
+      "steps": 1,
+      "hit_max_steps": false,
+      "failure_mode": "误调用：指代不明且无具体表达式，应该先追问",
+      "note": "",
+      "error": ""
+    },
+    {
+      "cid": "C30",
+      "category": "边界·超出工具能力",
+      "query": "帮我把这篇 PDF 里的表格提取出来",
+      "expect": [],
+      "got": [],
+      "expect_args": [],
+      "got_args": [],
+      "tool_ok": true,
+      "args_ok": true,
+      "correct": true,
+      "should_call": false,
+      "untouched": true,
+      "extra_calls": [],
+      "steps": 1,
+      "hit_max_steps": false,
+      "failure_mode": "误调用：工具集不支持文件处理，应说明能力边界",
+      "note": "",
+      "error": ""
+    }
+  ]
+}

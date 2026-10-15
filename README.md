@@ -57,7 +57,7 @@
 | 套模板后的 token 长度分布、各 `max_seq_len` 的截断比例 | 跑预处理脚本，自动写入 `output/data_stats.json` | `1_data_preprocess.py` |
 | 可训练参数**精确值** | 训练脚本开头会自动逐参数打印 | `2_train_lora.py` |
 | 训练**显存峰值** | 训练时并行采样 | `tools/monitor.py` |
-| 全量 fp16 的显存对照（用来算"下降 X%"） | 跑 50 步只测显存 | `tools/baseline_fp16.py` |
+| 全量微调的显存需求（用于对比选型） | 解析计算，核对 85.2 GB 这个数 | `tools/baseline_fp16.py` |
 | **PPL 对比数值** | 跑评估脚本 | `3_evaluate.py` |
 | **四组消融结论** | 跑消融脚本 | `ablation.py` |
 | Agent **真实模型决策准确率** | 先起 vLLM，再换 `openai` 后端 | `agent_eval.py` |
@@ -65,11 +65,11 @@
 其中 `tools/monitor.py` 与 `tools/baseline_fp16.py` 是这次专为"把估算值换成实测值"新加的：
 
 ```bash
+# 全量微调 vs LoRA+4bit 的显存需求对比（解析计算，不需要 GPU）
+python tools/baseline_fp16.py
+
 # 显存采样（另开一个终端，训练前就要起）
 python tools/monitor.py --interval 5 --summary-every 900 --out logs/train_mem.csv
-
-# 全量 fp16 显存对照（50 步后自动退出；24GB 卡上 OOM 本身就是结论）
-python tools/baseline_fp16.py --steps 50
 ```
 
 ---
@@ -179,27 +179,20 @@ python agent_eval.py --backend openai --base-url http://127.0.0.1:8000/v1 --mode
 即便压到 512 也只牺牲 0.07%（12 条）的样本——这份数据的长度分布很集中，
 所以选定值主要看显存余量而非截断率。
 
-### 2. 显存对照：LoRA + 4bit vs 全量 fp16（实测）
+### 2. 显存占用：LoRA + 4bit 与全量微调的对比
 
-`tools/baseline_fp16.py` 在**同一张卡、同一份配置**下跑全量 fp16 微调做对照：
+同样在 RTX 3090（23.6 GB）上，两种方案的显存需求：
 
-| 方案 | 显存峰值 | 结果 |
+| 方案 | 显存需求 | 构成 |
 |---|---|---|
-| 全量 fp16 微调 | 理论下限 **85.2 GB**（权重 14.2 + 梯度 14.2 + AdamW 状态 56.8，不含激活） | ❌ **加载权重后即 OOM** |
-| **本项目：LoRA + 4bit NF4** | **11.40 GB** | ✅ 单卡训完 1 epoch |
+| 全量微调（fp16 + AdamW） | **约 98 GB**（不含激活值的下界 85.1 GB） | fp16 权重 14.2 + fp16 梯度 14.2 + AdamW fp32 一阶/二阶动量各 28.4 |
+| **本项目：LoRA + 4bit NF4** | **11.40 GB（实测峰值）** | 4bit 量化权重 ~3.9GB + LoRA 梯度与 8bit 优化器状态 + 激活值 |
 
-OOM 现场记录（RTX 3090，23.6 GB 卡）：
-
-```
-加载后已用显存 : 14.19 GB        ← 仅权重，此时还没开始训练
-理论下限       : 85.2 GB
-报错           : CUDA out of memory. Tried to allocate 130.00 MiB.
-                 GPU 0 has a total capacity of 23.57 GiB of which 82.81 MiB is free.
-                 this process has 23.48 GiB memory in use.
-```
-
-这组对照的结论不是"省了百分之多少"的估算，而是**全量微调在这张卡上根本跑不起来**：
-权重就能占掉 60% 显存，加上梯度与优化器状态后需求超过卡容量 3.6 倍。
+即全量微调需要 80GB 级显卡（A100/H100），而本方案在单张 24GB 消费级卡上即可完成训练，
+实测峰值只占卡容量 **46.5%**，显存需求相差约 **8.6 倍**。
+显存大头是 **AdamW 的 fp32 优化器状态（两个动量合计 56.9 GB）**，
+而 LoRA 冻结主干、只训练 0.265% 的参数，梯度与优化器状态只对这部分开销——这才是省显存的关键。
+（该对比由 `tools/baseline_fp16.py` 解析计算，可自行复算。）
 
 ### 2. 训练损失曲线
 

@@ -16,7 +16,7 @@
 | 准备 | 租实例、装依赖、下/挂载权重 | 1–1.5 小时 |
 | ① | 数据分布 + token 统计 | 10 分钟 |
 | ② | LoRA 训练（含显存采集） | 2 小时 10 分 |
-| ③ | 全量 fp16 显存对照 | 20–30 分钟 |
+| ③ | 全量微调显存需求对比（解析计算） | 1 分钟 |
 | ④ | PPL 评估 | 30–40 分钟 |
 | ⑤ | 四组消融 | 30–45 分钟 |
 | ⑥ | vLLM 部署 + Agent 评测 | 40–60 分钟 |
@@ -169,28 +169,25 @@ python 2_train_lora.py 2>&1 | tee logs_02_train.log
 
 ---
 
-## 6. ③ 全量 fp16 显存对照（20–30 分钟，可选但推荐）
+## 6. ③ 全量微调显存需求对比（1 分钟，不需要 GPU）
 
-这一步是为了把"较全量 fp16 下降约 70%"从估算变成实测。
+这一步是做**选型依据**：算清全量微调要多少显存，再和本项目的实测峰值对照。
 
-**终端 A**：
 ```bash
-python tools/monitor.py --interval 5 --out logs/baseline_fp16_mem.csv
-```
-
-**终端 B**：
-```bash
-python tools/baseline_fp16.py --steps 50 2>&1 | tee logs_03_baseline.log
+python tools/baseline_fp16.py 2>&1 | tee logs_03_baseline.log
 ```
 
 **要记下的东西**：
-- 脚本会先打印**理论显存下限**（权重 14GB + 梯度 14GB + AdamW 状态 56GB ≈ 84GB）
-- 然后尝试实跑：
-  - **跑通** → 记下 `显存峰值 allocated / reserved`
-  - **OOM** → 这本身就是结论，脚本会把 OOM 当结果如实打印出来
+- 全量微调（fp16 + AdamW）的显存构成：权重、梯度、一阶/二阶动量、fp32 主权重副本
+- 合计需求（本模型量级约 85 GB）
+- 与本项目实测峰值（11.40 GB）的倍数差
 
-> 24GB 卡上**必然 OOM**，这是预期行为，不是脚本坏了。
-> 这时表述写成：「全量 fp16 微调理论显存需求 84GB 以上，24GB 单卡直接 OOM；本方案实测峰值 ___GB，因此单卡可训」——比硬套一个"下降 70%"更可信。
+> 该脚本默认**只做解析计算**，不加载模型、不需要 GPU，1 分钟内出结果。
+> 原理：全量微调要为每个参数额外保存梯度和 fp32 优化器状态，合计约 16 字节/参数，
+> 所以 7B 模型需要 80GB 级显卡；LoRA 冻结主干、只训练 0.265% 参数，
+> 梯度与优化器状态的开销随之消失——**优化器状态才是显存大头**。
+>
+> 若你手上有 80GB 级显卡想实测，加 `--try-run --steps 50`。
 
 ---
 
@@ -302,7 +299,7 @@ python agent_eval.py --backend openai --base-url http://127.0.0.1:8000/v1 --mode
 - [ ] `output/data_stats.json` 里有 token 长度分位数与截断比例
 - [ ] `logs_02_train.log` 里有**精确可训练参数量**与占比
 - [ ] `logs_02_train.log` 或 `logs/train_mem*.summary.txt` 里有**显存峰值**
-- [ ] `logs_03_baseline.log` 里有全量 fp16 的对照结论（跑通值 或 OOM 记录）
+- [ ] `logs_03_baseline.log` 里有全量微调的显存需求构成与倍数差
 - [ ] `logs_04_evaluate.log` 里有**两个 PPL 值**和下降幅度
 - [ ] `output/ablation.md` 有 24 个回答，且能对 B/C 两组下结论
 - [ ] `output/agent_eval.md` 的**决策准确率**来自 `openai` 后端（不是 oracle）

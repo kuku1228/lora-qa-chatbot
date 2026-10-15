@@ -28,6 +28,9 @@ from collections import Counter
 
 import numpy as np
 
+# 让脚本无论从项目根目录还是 tools/ 下执行，都能 import 到根目录的 config
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 # config 必须最先导入：内部会设置 HF 镜像环境变量（需早于 transformers）
 from config import BASE_MODEL, MAX_SEQ_LEN, TRAIN_PATH, EVAL_PATH
 

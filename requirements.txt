@@ -1,14 +1,44 @@
+# ============================================================
 # LoRA 中文问答助手依赖（Python 3.10+）
-# Windows 注意：torch 请按官方指引安装 CUDA 版本，
-#   例如：pip install torch --index-url https://download.pytorch.org/whl/cu121
-torch>=2.1.2
-transformers>=4.41.0
-peft>=0.10.0
-bitsandbytes>=0.43.0
-datasets>=2.18.0
-accelerate>=0.30.0
+#
+# ⚠️ 安装顺序很重要，不要直接 pip install -r 这个文件：
+#
+#   第 1 步：先单独装 torch（必须走 PyTorch 官方源）
+#       pip install torch==2.6.0 --index-url https://download.pytorch.org/whl/cu124
+#
+#   第 2 步：再装其余依赖
+#       pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
+#
+#   第 3 步：验证（必须 True）
+#       python -c "import torch; print(torch.__version__, torch.version.cuda, torch.cuda.is_available())"
+#
+# 为什么必须这样做：
+#   1. PyPI 上的 torch 默认是 CPU 版，装不上 GPU；
+#   2. 用 >= 约束时 pip 会拉最新版（实测拉到 torch 2.11 + CUDA 13），
+#      而 AutoDL 常见驱动只到 CUDA 12.x，装完 torch.cuda.is_available() 为 False；
+#   3. vLLM 0.8.5 依赖 torch 2.6.0 + CUDA 12.4，版本必须对齐，
+#      否则 vLLM 装完也起不来（见 agent/serve_vllm.sh 里的说明）。
+# ============================================================
+
+# ---------- 深度学习框架 ----------
+# 固定 2.6.0：与 vLLM 0.8.5 的依赖一致。请按上面的第 1 步单独安装。
+torch==2.6.0
+
+# ---------- 微调相关 ----------
+# 用上界把版本锁在已知可用的区间，避免 pip 拉到未来 breaking 版本
+transformers>=4.41.0,<5.0.0
+peft>=0.10.0,<1.0.0
+bitsandbytes>=0.43.0,<1.0.0
+accelerate>=0.30.0,<2.0.0
+
+# ---------- 数据与工具 ----------
+datasets>=2.18.0,<5.0.0
 sentencepiece>=0.1.99
 einops>=0.7.0
-numpy>=1.24.0
-pandas>=2.0.0
-matplotlib>=3.7.0
+numpy>=1.24.0,<3.0.0
+pandas>=2.0.0,<3.0.0
+matplotlib>=3.7.0,<4.0.0
+
+# ---------- 备注 ----------
+# Agent 相关依赖不在这里，单独安装（见 agent/requirements-agent.txt）：
+#   pip install -r agent/requirements-agent.txt -i https://pypi.tuna.tsinghua.edu.cn/simple

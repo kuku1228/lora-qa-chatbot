@@ -268,10 +268,15 @@ lora-qa-chatbot/
 
 ```bash
 # 建议 Python 3.10+
-pip install -r requirements.txt
+# ⚠️ 第 1 步必须先单独装 torch：PyPI 上的 torch 是 CPU 版，
+#    而用 >= 约束会让 pip 拉到最新的 CUDA 13 版（驱动可能不支持）
+pip install torch==2.6.0 --index-url https://download.pytorch.org/whl/cu124
 
-# Windows 用户注意：torch 需装 CUDA 版（已装可跳过）
-pip install torch --index-url https://download.pytorch.org/whl/cu121
+# 第 2 步再装其余依赖（torch 已满足，不会再被改动）
+pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
+
+# 第 3 步验证，必须输出 True
+python -c "import torch; print(torch.__version__, torch.version.cuda, torch.cuda.is_available())"
 ```
 
 国内网络下载 HuggingFace 资源慢时，先设镜像（`config.py` 已自动兜底，也可手动设）：
@@ -348,6 +353,9 @@ python -m agent.agent_react "帮我算一下 (23+67)*45 等于多少？"
 
 | 报错 | 原因 | 解决 |
 |---|---|---|
+| 装依赖时开始下载 `torch-2.11` + `nvidia-*-cu13` | `>=` 约束让 pip 拉了最新版 torch（CUDA 13），AutoDL 驱动撑不住 | **立刻中止**，按下方「环境准备」先单独装 `torch==2.6.0` cu124 版 |
+| `torch.cuda.is_available()` 返回 False | 装成了 PyPI 的 CPU 版 torch | `pip uninstall -y torch`，再用 `--index-url https://download.pytorch.org/whl/cu124` 重装 |
+| `pip install vllm==0.8.5` 依赖冲突 | vLLM 0.8.5 要求 torch 2.6.0 + CUDA 12.4 | 先把 torch 对齐到 2.6.0 再装 vLLM |
 | `CUDA out of memory` | 显存不够 | 降 `MAX_SEQ_LEN` 到 768 / 关 `DOUBLE_QUANT` / 换更大显存卡 |
 | `bitsandbytes` 导入失败 | 缺 CUDA 对应 wheel | `pip install bitsandbytes --prefer-binary`，确认 torch 是 CUDA 版 |
 | 训练报 `use_cache` 冲突 | 未关闭 cache | 训练脚本已处理；若自定义 Trainer 需手动 `model.config.use_cache=False` |

@@ -58,19 +58,30 @@ git archive -o ..\lora-qa-chatbot.zip HEAD
 
 ## 2. 环境准备
 
+> ⚠️ **先看驱动支持的 CUDA 版本，再决定装哪个 torch**。直接 `pip install -r requirements.txt`
+> 会用清华源拉到最新的 torch（实测是 **torch 2.11 + CUDA 13**，会连带下载 8–10GB 的 cu13 库），
+> 而 AutoDL 常见驱动只到 CUDA 12.x → 装完 `torch.cuda.is_available()` 为 `False`，
+> 而且和 vLLM 0.8.5（依赖 torch 2.6 + CUDA 12.4）冲突。
+
 ```bash
-cd lora-qa-chatbot
+cd /root/autodl-tmp/lora-qa-chatbot
 
 # 镜像（config.py 会自动兜底，但显式设置更稳）
 export HF_ENDPOINT=https://hf-mirror.com
 
-# 训练依赖
-pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
+# ① 先看驱动支持到哪个 CUDA
+nvidia-smi | head -4
 
-# 关键：torch 必须是 CUDA 版，否则 bitsandbytes 装不上
-python -c "import torch; print(torch.__version__, torch.cuda.is_available())"
-# 期望输出 True；若是 False 或没装 CUDA 版：
-# pip install torch --index-url https://download.pytorch.org/whl/cu121
+# ② 先单独装 torch（必须走 PyTorch 官方源，清华源的 torch 是 CPU 版）
+#    驱动 >= 12.4 用 cu124；只支持 12.1 则换成 cu121
+pip install torch==2.6.0 --index-url https://download.pytorch.org/whl/cu124
+
+# ③ 验证：必须打印 True，且 CUDA 版本与驱动匹配
+python -c "import torch; print(torch.__version__, torch.version.cuda, torch.cuda.is_available())"
+# 期望输出形如：2.6.0+cu124 12.4 True
+
+# ④ 再装其余依赖（torch 已满足，此步不会再动它）
+pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
 ```
 
 **如果系统盘满了导致 pip 失败**（AutoDL 常见），把临时目录挪到共享内存：
@@ -271,8 +282,11 @@ python agent_eval.py --backend openai --base-url http://127.0.0.1:8000/v1 --mode
 
 | 现象 | 原因 | 处理 |
 |---|---|---|
+| pip 开始下载 `torch-2.11.0` + `nvidia-*-cu13` | 清华源的 torch 是 CPU 版，且 `>=` 约束会拉最新版（CUDA 13），驱动撑不住 | **立刻 Ctrl+C**。按第 2 步先装 `torch==2.6.0 --index-url .../whl/cu124`，再装其余依赖 |
+| `torch.cuda.is_available()` 返回 False | 装成了 CPU 版 torch | `pip uninstall -y torch` 后按第 2 步重装 cu124 版 |
+| `pip install vllm==0.8.5` 报依赖冲突 | torch 版本不是 2.6.0 | vLLM 0.8.5 要 torch 2.6.0 + CUDA 12.4，先把 torch 对齐再装 vLLM |
 | `pip install` 报 No space left | 系统盘满 | `export TMPDIR=/root/tmp` 或 `/dev/shm` |
-| `bitsandbytes` 导入失败 | torch 不是 CUDA 版 | `pip install bitsandbytes --prefer-binary`，先确认 `torch.cuda.is_available()` |
+| `bitsandbytes` 导入失败 | torch 不是 CUDA 版，或缺 wheel | `pip install bitsandbytes --prefer-binary`，先确认 `torch.cuda.is_available()` |
 | `CUDA out of memory`（训练） | 显存不足 | 把 `config.py` 的 `MAX_SEQ_LEN` 降到 768，或关 `DOUBLE_QUANT` |
 | 训练报 `use_cache` 冲突 | gradient checkpointing 与 cache 冲突 | 脚本已处理（`2_train_lora.py` 里设了 `use_cache=False`） |
 | vLLM 报 `driver too old (found 12080)` | vLLM 新版与 CUDA 12.8 驱动不兼容 | 固定 `vllm==0.8.5` |

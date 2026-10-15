@@ -1,0 +1,14 @@
+# LoRA 中文问答助手依赖（Python 3.10+）
+# Windows 注意：torch 请按官方指引安装 CUDA 版本，
+#   例如：pip install torch --index-url https://download.pytorch.org/whl/cu121
+torch>=2.1.2
+transformers>=4.41.0
+peft>=0.10.0
+bitsandbytes>=0.43.0
+datasets>=2.18.0
+accelerate>=0.30.0
+sentencepiece>=0.1.99
+einops>=0.7.0
+numpy>=1.24.0
+pandas>=2.0.0
+matplotlib>=3.7.0

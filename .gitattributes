@@ -1,0 +1,28 @@
+# ============================================================
+# 换行符规范化：避免 Windows 开发 / Linux 部署时的 LF-CRLF 问题
+# ============================================================
+
+# 默认：由 git 自动识别文本文件，仓库内统一存 LF，检出时按平台处理
+* text=auto
+
+# Shell 脚本强制 LF —— 否则在 Linux 服务器上执行会报
+# "$'\r': command not found"，这是本项目部署脚本最常见的坑
+*.sh    text eol=lf
+
+# 二进制文件：不做换行转换
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.webp  binary
+*.pdf   binary
+*.safetensors binary
+*.bin   binary
+*.pt    binary
+*.zip   binary
+
+# ============================================================
+# GitHub 语言统计：把文档类文件排除在语言占比之外
+# ============================================================
+docs/project_flow.html linguist-documentation
+*.ipynb linguist-documentation

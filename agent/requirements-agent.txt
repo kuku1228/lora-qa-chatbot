@@ -1,0 +1,7 @@
+# Agent 升级版依赖（与训练/推理依赖相互独立）
+# 安装：pip install -r agent/requirements-agent.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
+langgraph>=1.0.0
+deepagents>=0.7.0
+langchain-openai>=1.0.0
+langchain-core>=1.6.0
+gradio>=5.0.0

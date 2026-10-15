@@ -1,0 +1,37 @@
+MIT License
+
+Copyright (c) 2026 马琬蕊 (Wanrui Ma)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+--------------------------------------------------------------------------
+第三方组件与数据的许可说明（Third-Party Notices）
+
+本仓库的 MIT 许可仅覆盖本仓库中的源代码与文档，不覆盖以下第三方资源：
+
+1. 基座模型 Qwen/Qwen2-7B-Instruct —— 遵循 Apache License 2.0
+   https://huggingface.co/Qwen/Qwen2-7B-Instruct
+
+2. 指令数据集 hfl/alpaca_zh_51k —— 遵循 Apache License 2.0
+   https://huggingface.co/datasets/hfl/alpaca_zh_51k
+
+3. 由上述基座模型微调得到的 LoRA adapter 权重 —— 需同时遵守基座模型的
+   Apache License 2.0，本仓库不包含该权重文件（见 .gitignore 说明）。
+
+使用本仓库代码时，请自行确认上述第三方许可的合规性。

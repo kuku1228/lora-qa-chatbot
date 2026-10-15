@@ -1,0 +1,93 @@
+<html style="margin:0;padding:0;">
+<div style="background-color:transparent;box-sizing:border-box;font-family:'Roboto','PingFang SC','Segoe UI',Arial,sans-serif;color:#1A1B1C;max-width:860px;margin:0 auto;padding:8px 0;">
+  <div style="margin:8px 4px 16px;">
+    <div style="font-size:16px;font-weight:600;">LoRA 中文问答助手 · 项目执行全流程</div>
+    <div style="font-size:12px;color:#6B7280;margin-top:4px;">6 个阶段串行推进，每阶段都有可落盘产物。图中"预期指标"为方案口径，跑完用本地实测回填。</div>
+  </div>
+
+  <!-- 阶段 1：数据预处理 -->
+  <div style="display:flex;gap:12px;align-items:flex-start;">
+    <div style="flex:0 0 34px;width:34px;height:34px;border-radius:50%;background:#A3D5E8;color:#1A1B1C;font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:center;">1</div>
+    <div style="flex:1 1 0;min-width:0;background:#FFFFFF;border:0.5px solid rgba(0,0,0,0.08);border-left:3px solid #A3D5E8;border-radius:12px;padding:10px 12px;box-sizing:border-box;">
+      <div style="font-size:13.5px;font-weight:600;">数据预处理（统计强项）</div>
+      <div style="font-size:12px;color:#6B7280;margin-top:4px;line-height:1.6;">下载 alpaca-cn → 采样 2 万条 → 清洗（空值 / 超长 / 噪声）→ 长度分布统计 + 可视化</div>
+      <div style="margin-top:6px;display:inline-block;background:rgba(163,213,232,0.25);color:#1A1B1C;font-size:11px;padding:2px 8px;border-radius:8px;">产物：train.jsonl（≈19800 条）· eval.jsonl（200 条）· 分布图</div>
+    </div>
+  </div>
+  <div style="width:2px;height:22px;background:#E4E3DD;margin-left:16px;"></div>
+
+  <!-- 阶段 2：模型加载与量化 -->
+  <div style="display:flex;gap:12px;align-items:flex-start;">
+    <div style="flex:0 0 34px;width:34px;height:34px;border-radius:50%;background:#94D4D0;color:#1A1B1C;font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:center;">2</div>
+    <div style="flex:1 1 0;min-width:0;background:#FFFFFF;border:0.5px solid rgba(0,0,0,0.08);border-left:3px solid #94D4D0;border-radius:12px;padding:10px 12px;box-sizing:border-box;">
+      <div style="font-size:13.5px;font-weight:600;">模型加载与量化（省显存）</div>
+      <div style="font-size:12px;color:#6B7280;margin-top:4px;line-height:1.6;">4bit NF4 + 双量化加载 Qwen2-7B · 开启梯度检查点 · 关闭 use_cache</div>
+      <div style="margin-top:6px;display:inline-block;background:rgba(148,212,208,0.25);color:#1A1B1C;font-size:11px;padding:2px 8px;border-radius:8px;">产物：权重占用 ≈3.5GB（fp16 为 14GB），显存 ↓ 约 70%</div>
+    </div>
+  </div>
+  <div style="width:2px;height:22px;background:#E4E3DD;margin-left:16px;"></div>
+
+  <!-- 阶段 3：LoRA 注入 -->
+  <div style="display:flex;gap:12px;align-items:flex-start;">
+    <div style="flex:0 0 34px;width:34px;height:34px;border-radius:50%;background:#9BBBF4;color:#1A1B1C;font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:center;">3</div>
+    <div style="flex:1 1 0;min-width:0;background:#FFFFFF;border:0.5px solid rgba(0,0,0,0.08);border-left:3px solid #9BBBF4;border-radius:12px;padding:10px 12px;box-sizing:border-box;">
+      <div style="font-size:13.5px;font-weight:600;">LoRA 低秩注入（核心亮点）</div>
+      <div style="font-size:12px;color:#6B7280;margin-top:4px;line-height:1.6;">冻结主干权重，向注意力 + FFN 共 7 个线性层注入低秩矩阵 B·A · r=8 / alpha=16 / dropout=0.05</div>
+      <div style="margin-top:6px;display:inline-block;background:rgba(155,187,244,0.25);color:#1A1B1C;font-size:11px;padding:2px 8px;border-radius:8px;">产物：PeftModel，可训练参数 &lt;1%</div>
+    </div>
+  </div>
+  <div style="width:2px;height:22px;background:#E4E3DD;margin-left:16px;"></div>
+
+  <!-- 阶段 4：训练 -->
+  <div style="display:flex;gap:12px;align-items:flex-start;">
+    <div style="flex:0 0 34px;width:34px;height:34px;border-radius:50%;background:#C9A7E8;color:#1A1B1C;font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:center;">4</div>
+    <div style="flex:1 1 0;min-width:0;background:#FFFFFF;border:0.5px solid rgba(0,0,0,0.08);border-left:3px solid #C9A7E8;border-radius:12px;padding:10px 12px;box-sizing:border-box;">
+      <div style="font-size:13.5px;font-weight:600;">训练与日志（3 epoch）</div>
+      <div style="font-size:12px;color:#6B7280;margin-top:4px;line-height:1.6;">lr=2e-4 余弦退火 · batch=1 + 梯度累积 16（等效 16）· 8bit 优化器 · 每轮存 checkpoint</div>
+      <div style="margin-top:6px;display:inline-block;background:rgba(201,167,232,0.25);color:#1A1B1C;font-size:11px;padding:2px 8px;border-radius:8px;">产物：loss_curve.png（平稳收敛）· LoRA adapter（≈15MB）</div>
+    </div>
+  </div>
+  <div style="width:2px;height:22px;background:#E4E3DD;margin-left:16px;"></div>
+
+  <!-- 阶段 5：评估 -->
+  <div style="display:flex;gap:12px;align-items:flex-start;">
+    <div style="flex:0 0 34px;width:34px;height:34px;border-radius:50%;background:#F4B393;color:#1A1B1C;font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:center;">5</div>
+    <div style="flex:1 1 0;min-width:0;background:#FFFFFF;border:0.5px solid rgba(0,0,0,0.08);border-left:3px solid #F4B393;border-radius:12px;padding:10px 12px;box-sizing:border-box;">
+      <div style="font-size:13.5px;font-weight:600;">效果评估（双维度）</div>
+      <div style="font-size:12px;color:#6B7280;margin-top:4px;line-height:1.6;">客观：100 条评估集上对比原始 vs 微调模型的 Perplexity · 主观：同一批问题生成回答，人工盲评</div>
+      <div style="margin-top:6px;display:inline-block;background:rgba(244,179,147,0.25);color:#1A1B1C;font-size:11px;padding:2px 8px;border-radius:8px;">产物：PPL 降幅数据 · comparison.md 对比报告</div>
+    </div>
+  </div>
+  <div style="width:2px;height:22px;background:#E4E3DD;margin-left:16px;"></div>
+
+  <!-- 阶段 6：部署 -->
+  <div style="display:flex;gap:12px;align-items:flex-start;">
+    <div style="flex:0 0 34px;width:34px;height:34px;border-radius:50%;background:#94D8C3;color:#1A1B1C;font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:center;">6</div>
+    <div style="flex:1 1 0;min-width:0;background:#FFFFFF;border:0.5px solid rgba(0,0,0,0.08);border-left:3px solid #94D8C3;border-radius:12px;padding:10px 12px;box-sizing:border-box;">
+      <div style="font-size:13.5px;font-weight:600;">本地推理 Demo</div>
+      <div style="font-size:12px;color:#6B7280;margin-top:4px;line-height:1.6;">4bit 基座 + LoRA adapter 加载 · 命令行交互问答 · 支持自定义问题推理</div>
+      <div style="margin-top:6px;display:inline-block;background:rgba(148,216,195,0.25);color:#1A1B1C;font-size:11px;padding:2px 8px;border-radius:8px;">产物：可运行本地问答（输入 exit 退出）</div>
+    </div>
+  </div>
+
+  <!-- 预期指标条 -->
+  <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;box-sizing:border-box;">
+    <div style="flex:1 1 150px;min-width:0;padding:10px 12px;background:rgba(155,187,244,0.12);border-radius:12px;box-sizing:border-box;">
+      <div style="font-size:11px;color:#6B7280;">训练显存</div>
+      <div style="font-size:16px;font-weight:600;margin-top:2px;">↓ 约 70%<span style="font-size:11px;color:#6B7280;font-weight:400;">（预期）</span></div>
+    </div>
+    <div style="flex:1 1 150px;min-width:0;padding:10px 12px;background:rgba(155,187,244,0.12);border-radius:12px;box-sizing:border-box;">
+      <div style="font-size:11px;color:#6B7280;">可训练参数</div>
+      <div style="font-size:16px;font-weight:600;margin-top:2px;">&lt;1%</div>
+    </div>
+    <div style="flex:1 1 150px;min-width:0;padding:10px 12px;background:rgba(155,187,244,0.12);border-radius:12px;box-sizing:border-box;">
+      <div style="font-size:11px;color:#6B7280;">Perplexity</div>
+      <div style="font-size:16px;font-weight:600;margin-top:2px;">实测回填<span style="font-size:11px;color:#6B7280;font-weight:400;">（预期 ↓）</span></div>
+    </div>
+    <div style="flex:1 1 150px;min-width:0;padding:10px 12px;background:rgba(155,187,244,0.12);border-radius:12px;box-sizing:border-box;">
+      <div style="font-size:11px;color:#6B7280;">人工盲评更优占比</div>
+      <div style="font-size:16px;font-weight:600;margin-top:2px;">实测回填<span style="font-size:11px;color:#6B7280;font-weight:400;">（预期 ↑35%）</span></div>
+    </div>
+  </div>
+</div>
+</html>

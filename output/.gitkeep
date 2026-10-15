@@ -1,0 +1,8 @@
+# 该目录存放 2_train_lora.py 生成的训练产物：
+#   lora-qwen2/final/（LoRA adapter，约 80MB）
+#   lora-qwen2/loss_curve.png
+# adapter 权重不纳入版本库（见 ../.gitignore），运行脚本后自动生成。
+#
+# 本目录下已提交的对比素材：
+#   comparison.md  — 微调前后同题回答对比
+#   loss_curve.png — 训练损失曲线

@@ -21,8 +21,8 @@
 |---|---|
 | 基座 / 方法 | Qwen2-7B-Instruct + LoRA（r=8, α=16, dropout=0.05），注入注意力与 FFN 共 7 个线性层 |
 | 可训练参数 | 约 **2,019 万**，占全量 **0.265%**（按各层真实维度逐参数累加，可用 `2_train_lora.py` 的输出复算） |
-| 显存 | 4bit NF4 量化 + 双重量化 + 梯度检查点 + 8bit paged AdamW；单卡 12GB 显存可训练（峰值待实测填入，见下方「待补的实测数据」） |
-| 训练规模 | 1 epoch / 1,116 步 |
+| 显存 | 4bit NF4 量化 + 双重量化 + 梯度检查点 + 8bit paged AdamW；**实测训练显存峰值 11.40 GB**（nvidia-smi 口径，torch 内部统计 10.95 GB reserved），RTX 3090 24GB 上占用 46.5% |
+| 训练规模 | 1 epoch / 1,116 步，实测耗时 **110.4 分钟** |
 | 数据 | alpaca_zh_51k 采样 2 万条，清洗后 18,053 条，训练 17,853 / 评估 200 |
 | Agent | LangGraph ReAct 状态机、3 类工具、多轮记忆 |
 | 部署 | vLLM 部署为 OpenAI 兼容 API，LangChain 接入 |

@@ -45,7 +45,9 @@ TARGET_MODULES = ["q_proj", "k_proj", "v_proj", "o_proj",
 # ---------- 训练 ----------
 MAX_SEQ_LEN     = 1024        # 单样本最大 token 数（可降到 768 应对小显存）
 LEARNING_RATE   = 2e-4        # LoRA 常用学习率
-NUM_EPOCHS      = 3
+NUM_EPOCHS      = 1           # 小数据集（1.8 万条）1 轮即收敛：loss 1.68 → 1.32，
+                              # 且末段已在 1.30~1.38 平稳波动、无过拟合迹象。
+                              # 轮次过多会记忆噪声；如需对照实验可改 3 看差异。
 BATCH_SIZE      = 1           # 小显存单卡：batch=1
 GRAD_ACCUM      = 16          # 梯度累积 16 步 → 等效 batch_size = 16
 WARMUP_RATIO    = 0.03

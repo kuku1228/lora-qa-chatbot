@@ -337,7 +337,7 @@ python -m agent.agent_react "帮我算一下 (23+67)*45 等于多少？"
 | lora_dropout | 0.05 | 低秩矩阵 dropout，防过拟合 |
 | target_modules | 7 个线性层 | q/k/v/o_proj + gate/up/down_proj（LLaMA 系结构通用） |
 | learning_rate | 2e-4 | LoRA 只更新少量参数，学习率比全量微调（1e-5~5e-5）高一个量级 |
-| num_train_epochs | 3 | 小数据集（2 万条）轮次过多必过拟合；实测 1 轮即收敛 |
+| num_train_epochs | 1 | 小数据集（1.8 万条）轮次过多会记忆噪声；实测 1 轮 loss 即收敛到 1.30~1.38 平稳区间 |
 | max_seq_len | 1024 | 单样本最大 token 数（可降到 768 应对小显存） |
 | batch_size / grad_accum | 1 / 16 | 单卡小显存；等效 batch = 16，兼顾稳定与显存 |
 | 4bit + NF4 + 双量化 | on | 权重 3.5GB 级占用，7B 模型单卡可训 |

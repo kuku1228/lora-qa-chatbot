@@ -80,7 +80,7 @@ def print_exact_trainable(model):
         Qwen2 的真实维度复算。这里直接遍历参数张量求和，结果是精确值，
         并且能列出每个目标层各自贡献多少。
     """
-    total = sum(p.numel() for p in model.parameters())
+    total = _true_param_count(model)
     trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)
 
     per_module = {}
@@ -93,7 +93,7 @@ def print_exact_trainable(model):
     print("\n" + "=" * 62)
     print("可训练参数统计（精确值）")
     print("=" * 62)
-    print(f"  模型总参数   : {total:,}  ({total/1e9:.3f} B)")
+    print(f"  模型总参数   : {total:,}  ({total/1e9:.3f} B)   ← 按模型结构计算")
     print(f"  可训练参数   : {trainable:,}  ({trainable/1e4:.0f} 万)")
     print(f"  可训练占比   : {trainable/total*100:.4f}%")
     print(f"  冻结参数     : {total-trainable:,}")
@@ -108,6 +108,60 @@ def print_exact_trainable(model):
     print("=" * 62)
     print("→ 记下『可训练参数』与『可训练占比』，用于替换文档中的估算值。\n")
     return total, trainable
+
+
+def _true_param_count(model) -> int:
+    """按模型结构计算真实参数量（不受 4bit 量化影响）。
+
+    为什么不能用 sum(p.numel())：
+        4bit 量化后，量化层返回的是打包后的低比特张量，numel() 不再等于
+        逻辑参数量。实测会把 7.62B 的模型算成 4.37B，导致占比偏大 1.74 倍
+        （0.4616% 而非正确的 0.265%）。
+
+    实现要点：
+        1. 用某个真正的 nn.Linear 的权重张量推断 dtype，把量化张量的 numel
+           还原成逻辑参数量（weight.numel() * (packed_numel / logical_elem_count)）；
+        2. 输出头是否与词嵌入共享【按张量名判断】，不靠 config 里
+           tie_word_embeddings 这个容易记错的字段——Qwen2-7B 实际是不共享的
+           （多一份 152064 x 3584 的 lm_head）。
+    """
+    import torch.nn as nn
+
+    named = dict(model.named_parameters())
+
+    # 1) 从某个被量化的 nn.Linear 推断逻辑/物理元素比
+    #    （4bit 打包后 numel 约为逻辑量的一半，ratio ≈ 2）
+    ratio = 1.0
+    for m in model.modules():
+        if isinstance(m, nn.Linear) and getattr(m.weight, "quant_state", None) is not None:
+            logical = int(m.weight.shape[0]) * int(m.weight.shape[1])
+            packed = int(m.weight.numel())
+            if packed > 0 and logical > packed:
+                ratio = logical / packed
+            break
+
+    # 2) 逐参数累加；LoRA 权重是 fp16 真实张量，本身就是逻辑值，不能乘 ratio
+    total = 0
+    n_quantized = 0
+    for name, p in named.items():
+        if "lora_" in name:
+            total += int(p.numel())
+            continue
+        if getattr(p, "quant_state", None) is not None:
+            total += int(p.numel() * ratio)
+            n_quantized += 1
+        else:
+            total += int(p.numel())
+
+    # 3) 输出头与词嵌入共享时不能重复计（按张量名判断，不猜 config）
+    emb_name = next((n for n in named if n.endswith("embed_tokens.weight")), None)
+    has_lm_head = any(n.endswith("lm_head.weight") for n in named)
+    if emb_name and not has_lm_head:
+        total -= int(named[emb_name].numel())
+
+    print(f"      [诊断] 量化元素比 ratio={ratio:.3f}，量化参数张量 {n_quantized} 个，"
+          f"lm_head 独立={has_lm_head}")
+    return total
 
 
 def _count_layers(model) -> int:

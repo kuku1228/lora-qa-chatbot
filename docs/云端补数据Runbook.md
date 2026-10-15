@@ -121,19 +121,20 @@ grep BASE_MODEL config.py
 
 ---
 
-## 4. ① 数据分布 + token 长度统计（10 分钟）
+## 4. ① 数据长度统计（2–3 分钟，不占 GPU）
+
+> 注意：**不要**重新跑 `1_data_preprocess.py` —— 那个脚本会重新下载数据集并重跑清洗划分，
+> 而 `data/train.jsonl` 和 `data/eval.jsonl` 已经存在了。只补统计用下面这个脚本。
 
 ```bash
-python 1_data_preprocess.py 2>&1 | tee logs_01_preprocess.log
+python tools/data_stats.py 2>&1 | tee logs_01_data_stats.log
 ```
 
-**要记下的东西**（终端里会直接打印）：
-- 清洗后总条数、丢弃条数、保留率
-- `instruction` / `output` 的 **P50 / P90 / P95 / P99 / Max**（字符）
-- 套完 chat 模板后的 **token 长度 P50 / P90 / P95 / P99 / Max**
+**要记下的东西**（终端会直接打印，同时写入 `output/data_stats.json`）：
+- 字符长度 P50 / P90 / P95 / P99 / Max（instruction、output）
+- 套完 chat 模板后的 **token 长度** P50 / P90 / P95 / P99 / Max
 - 各候选 `max_seq_len`（512/768/1024/2048）下的**截断比例**
-
-同时会生成 `output/data_stats.json`，这些数字都在里面，不用手抄。
+- 数据质量：input 空值率、重复组、训练/评估重叠、噪声条数
 
 **这一步回答的问题**：`max_seq_len=1024` 到底截断了多少样本、这个值定得合不合理。
 

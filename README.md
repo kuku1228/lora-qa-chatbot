@@ -81,6 +81,43 @@
 - **工具安全**：计算器用 AST 白名单求值，只放行数字常量和四则、幂、取模这类运算符，函数调用、变量、属性访问在语法树层面就会被拒绝，所以不存在 `eval()` 那种代码注入问题。
 - **指代问题兜底**："上一个问题是什么"这类对话指代先走规则解析直查历史，**不消耗模型推理**；规则解析不出但疑似在问历史时，走"禁工具"回合让模型基于历史回答——既防误调工具，又降低无效推理开销。
 
+### Agent 决策评测（`agent_eval.py`）
+
+Agent 之前只能"跑起来、能演示"，它的决策质量没有任何量化指标。`agent_eval.py` 补了这一块：
+用 30 条用例测两件事——**该调工具时有没有调对、不该调时有没有乱调**。
+
+测试集分成 9 类场景（该调计算器 / 该调时间 / 该调网页 / 多步 / 历史指代 / 纯知识问答 /
+网页工具越界 / 闲聊 / 边界先追问）。期望行为不是拍脑袋定的，而是从 `agent/agent_react.py`
+的系统提示词（第 3、5、6 条）和 `agent/tools.py` 里各工具的 description 推出来的。
+`parse_action` 和工具求值逻辑是生产代码的逐行副本，`fetch_url` 在评测中换成不发网络请求的桩。
+
+三个后端，用途完全不同：
+
+| 后端 | 是什么 | 结果 | 说明 |
+|---|---|---|---|
+| `oracle` | 严格按期望作答的参考决策器 | 决策准确率 **100%** | **装置自检**，不是模型能力。它拿不到 100% 就说明评测代码有 bug |
+| `naive` | 故意写坏的规则决策器 | 决策准确率 **63.3%**（误调用率 44.4%） | 用来验证指标能区分出错误行为 |
+| `openai` | vLLM 部署的真实微调模型 | 待你跑 | **只有这个后端的结果才是模型指标** |
+
+```bash
+# 本地即可跑，不需要 GPU 和模型服务
+python agent_eval.py --backend oracle    # 装置自检
+python agent_eval.py --backend naive     # 指标区分度对照
+
+# 真实模型指标（需先在 GPU 机器上 bash agent/serve_vllm.sh）
+python agent_eval.py --backend openai --base-url http://127.0.0.1:8000/v1 --model lora1
+```
+
+报告输出到 `output/agent_eval.md`（分场景准确率 + 错因分布 + 逐条明细）和
+`output/agent_eval.json`。`oracle` 那一轮结果放在 [`output/agent_eval.md`](output/agent_eval.md)，
+`naive` 的对照放在 [`output/agent_eval_naive.md`](output/agent_eval_naive.md)。
+
+> 自检这一步不是走过场：第一版评测代码被 `oracle` 抓出 **3 个 bug**——决策步数计数器没递增、
+> Observation 消息被算进步数、同一工具在一轮里被调用多次时按"工具名"索引导致后面的参数
+> 覆盖前面的。如果直接拿第一版去跑模型，得到的数字是错的。
+
+> ⚠️ 30 条用例**规模很小**，只能看方向，不足以支撑统计结论。要下可信结论需要扩大用例并多次采样。
+
 ---
 
 ## 运行结果
@@ -152,6 +189,7 @@ lora-qa-chatbot/
 ├── 3_evaluate.py           # PPL 对比 + 同题生成对比
 ├── 4_infer_demo.py         # 命令行本地问答 Demo（4bit 基座 + LoRA）
 ├── ablation.py             # 消融对比：system prompt × LoRA 微调（4 组对照）
+├── agent_eval.py           # Agent 工具调用决策评测（30 用例，3 个可插拔后端）
 ├── gradio_demo.py          # 网页聊天 Demo（原始版，GPU 实例运行）
 ├── infer_local.py          # 本地 CPU 推理版（Qwen2-1.5B + LoRA，无显卡电脑用）
 ├── lora_qa_chatbot_modelscope.ipynb   # 魔搭平台训练笔记本（云端 GPU 训练用）
@@ -215,6 +253,8 @@ python 2_train_lora.py        # ② LoRA 微调：4bit 加载→训练→保存 
 python 3_evaluate.py          # ③ 效果评估：PPL 对比 + 同题回答对比
 python 4_infer_demo.py        # ④ （可选）本地问答 Demo
 python ablation.py            # ⑤ （可选）4 组消融对比，输出 output/ablation.md
+python agent_eval.py --backend oracle   # ⑥ （可选）Agent 决策评测：先自检装置是否正常
+python agent_eval.py --backend naive    #    再跑对照组，确认指标能区分出错误行为
 ```
 
 > 无本地 GPU 时，可用 [`lora_qa_chatbot_modelscope.ipynb`](lora_qa_chatbot_modelscope.ipynb) 在魔搭（ModelScope）云端 GPU 实例上训练，新用户有免费算力额度。

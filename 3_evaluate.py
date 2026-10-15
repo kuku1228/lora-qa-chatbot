@@ -145,9 +145,20 @@ def main():
         print(f"  微调：{a2[:80]}...")
 
     os.makedirs("output", exist_ok=True)
-    with open(os.path.join("output", "comparison.md"), "w", encoding="utf-8") as f:
+    # 写到一个新文件，不覆盖已有的 output/comparison.md
+    # （旧的 comparison.md 是上一次运行的真实结果，留着可以对照）
+    out_path = os.path.join("output", "comparison_with_ppl.md")
+    with open(out_path, "w", encoding="utf-8") as f:
         f.write("\n".join(md))
-    print("\n对比结果已保存：output/comparison.md")
+    # PPL 单独存一份 JSON，方便直接取数填文档
+    with open(os.path.join("output", "ppl_result.json"), "w", encoding="utf-8") as f:
+        json.dump({"base_ppl": ppl_base, "lora_ppl": ppl_lora,
+                   "drop_pct": (1 - ppl_lora / ppl_base) * 100,
+                   "eval_n": len(texts), "model": BASE_MODEL,
+                   "adapter": ADAPTER_DIR}, f, ensure_ascii=False, indent=2)
+    print(f"\n对比结果已保存：{out_path}")
+    print("PPL 数值已保存：output/ppl_result.json")
+    print("（原有的 output/comparison.md 未被覆盖）")
     print("（人工打分：把两组回答打印出来盲评，统计“微调回答更优”的占比）")
 
 

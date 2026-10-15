@@ -179,6 +179,28 @@ python agent_eval.py --backend openai --base-url http://127.0.0.1:8000/v1 --mode
 即便压到 512 也只牺牲 0.07%（12 条）的样本——这份数据的长度分布很集中，
 所以选定值主要看显存余量而非截断率。
 
+### 2. 显存对照：LoRA + 4bit vs 全量 fp16（实测）
+
+`tools/baseline_fp16.py` 在**同一张卡、同一份配置**下跑全量 fp16 微调做对照：
+
+| 方案 | 显存峰值 | 结果 |
+|---|---|---|
+| 全量 fp16 微调 | 理论下限 **85.2 GB**（权重 14.2 + 梯度 14.2 + AdamW 状态 56.8，不含激活） | ❌ **加载权重后即 OOM** |
+| **本项目：LoRA + 4bit NF4** | **11.40 GB** | ✅ 单卡训完 1 epoch |
+
+OOM 现场记录（RTX 3090，23.6 GB 卡）：
+
+```
+加载后已用显存 : 14.19 GB        ← 仅权重，此时还没开始训练
+理论下限       : 85.2 GB
+报错           : CUDA out of memory. Tried to allocate 130.00 MiB.
+                 GPU 0 has a total capacity of 23.57 GiB of which 82.81 MiB is free.
+                 this process has 23.48 GiB memory in use.
+```
+
+这组对照的结论不是"省了百分之多少"的估算，而是**全量微调在这张卡上根本跑不起来**：
+权重就能占掉 60% 显存，加上梯度与优化器状态后需求超过卡容量 3.6 倍。
+
 ### 2. 训练损失曲线
 
 ![Loss Curve](output/loss_curve.png)
